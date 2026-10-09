@@ -38,8 +38,8 @@ body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);fo
 .wrap{max-width:640px;margin:0 auto;padding-inline:max(16px,env(safe-area-inset-left,0px));padding-top:calc(20px + env(safe-area-inset-top,0px));padding-bottom:calc(48px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:18px}
 header h1{font-family:var(--f-display);font-weight:600;font-size:1.45rem;margin:0;letter-spacing:-.01em;text-wrap:balance}
 header p{margin:4px 0 0;color:var(--muted);font-size:.92rem}
-.tabs{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding-block:8px}
-.tabs button{font:inherit;font-weight:600;font-size:.92rem;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:12px;padding:10px 6px;cursor:pointer}
+.tabs{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding-block:8px}
+.tabs button{font:inherit;font-weight:600;font-size:.85rem;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:12px;padding:10px 6px;cursor:pointer}
 .tabs button[aria-selected="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
 button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 .search{width:100%;font:inherit;font-size:1.05rem;padding:14px 16px;border-radius:14px;border:1px solid var(--line);background:var(--surface);color:var(--ink)}
@@ -91,7 +91,11 @@ textarea{min-height:64px;resize:vertical}
 .alarm .num{font-family:var(--f-display);font-size:1.4rem;color:var(--no);text-decoration:none}
 .backup{background:var(--mid-bg);border:1px solid var(--mid);border-radius:14px;padding:12px 14px;font-size:.9rem;display:flex;flex-direction:column;gap:8px}
 .ver{text-align:center;font-size:.75rem;color:var(--muted)}
-@media (prefers-reduced-motion:no-preference){.tabs button,.chip,.scale button{transition:background .15s,color .15s}}
+@media (prefers-reduced-motion:no-preference){.tabs button,.chip,.scale button{transition:background .15s,color .15s}
+  .slide-l{animation:slide-l .22s ease-out} .slide-r{animation:slide-r .22s ease-out}
+  @keyframes slide-l{from{opacity:.3;transform:translateX(28px)}to{opacity:1;transform:none}}
+  @keyframes slide-r{from{opacity:.3;transform:translateX(-28px)}to{opacity:1;transform:none}}}
+.wrap{overflow-x:clip}
 </style>
 </head>
 <body>
@@ -105,6 +109,7 @@ textarea{min-height:64px;resize:vertical}
     <button role="tab" id="t-food" aria-selected="true" data-tab="food">Продукты</button>
     <button role="tab" id="t-diary" aria-selected="false" data-tab="diary">Дневник</button>
     <button role="tab" id="t-memo" aria-selected="false" data-tab="memo">Памятка</button>
+    <button role="tab" id="t-ideas" aria-selected="false" data-tab="ideas">Идеи</button>
   </nav>
 
   <section id="p-food" style="display:flex;flex-direction:column;gap:14px">
@@ -188,7 +193,18 @@ textarea{min-height:64px;resize:vertical}
     </div>
     <p class="note">Подсказки собраны из общих рекомендаций и не заменяют назначения врача.</p>
   </section>
-  <p class="ver">v1.1</p>
+  <section id="p-ideas" hidden style="display:flex;flex-direction:column;gap:14px">
+    <form class="card" id="idea-form">
+      <div class="field"><label for="idea-text">Что неудобно, что добавить или поменять</label><textarea id="idea-text" placeholder="Например: добавить гранолу без орехов; показывать, сколько дней без сыпи"></textarea></div>
+      <button class="primary" type="submit">Записать</button>
+    </form>
+    <div class="row">
+      <button class="ghost" type="button" id="idea-send">Отправить в Telegram</button>
+      <span class="note" id="idea-note"></span>
+    </div>
+    <div class="entries" id="ideas"></div>
+  </section>
+  <p class="ver">v1.4</p>
 </div>
 
 <script>
@@ -275,12 +291,49 @@ $("#q").addEventListener("input",renderFood);
 $("#filters").addEventListener("click",e=>{const b=e.target.closest(".chip");if(!b)return;filt=b.dataset.f;document.querySelectorAll(".chip").forEach(c=>c.setAttribute("aria-pressed",c===b));renderFood()});
 renderFood();
 
-document.querySelector(".tabs").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;
-  document.querySelectorAll(".tabs button").forEach(t=>t.setAttribute("aria-selected",t===b));
-  for(const k of["food","diary","memo"]) $("#p-"+k).hidden=k!==b.dataset.tab;
-  try{localStorage.setItem("kr-tab",b.dataset.tab)}catch(e){console.error(e)}
-});
-try{const t=localStorage.getItem("kr-tab");if(t)document.querySelector(`[data-tab="${t}"]`)?.click()}catch(e){console.error(e)}
+/* ---------- Вкладки: кнопки, свайп влево/вправо, системный «назад» ----------
+   «Продукты» — главный экран. С «Дневника» и «Памятки» жест «назад» возвращает на «Продукты»,
+   с «Продуктов» — закрывает приложение, как обычно. */
+const TABS=["food","diary","memo","ideas"];
+let cur="food";
+function showTab(k,dir){
+  if(!TABS.includes(k))k="food";
+  document.querySelectorAll(".tabs button").forEach(t=>t.setAttribute("aria-selected",t.dataset.tab===k));
+  for(const t of TABS) $("#p-"+t).hidden=t!==k;
+  if(dir&&k!==cur){const p=$("#p-"+k);p.classList.remove("slide-l","slide-r");void p.offsetWidth;p.classList.add(dir>0?"slide-l":"slide-r")}
+  cur=k;
+  try{localStorage.setItem("kr-tab",k)}catch(e){console.error(e)}
+}
+function goTab(k){
+  if(k===cur)return;
+  const dir=TABS.indexOf(k)>TABS.indexOf(cur)?1:-1;
+  if(k==="food"){ if(history.state&&history.state.tab){history.back();return} showTab(k,dir);return }
+  if(cur==="food") history.pushState({tab:k},"","#"+k);
+  else history.replaceState({tab:k},"","#"+k);
+  showTab(k,dir);
+}
+window.addEventListener("popstate",e=>{const k=(e.state&&e.state.tab)||"food";showTab(k,TABS.indexOf(k)>TABS.indexOf(cur)?1:-1)});
+document.querySelector(".tabs").addEventListener("click",e=>{const b=e.target.closest("button");if(b)goTab(b.dataset.tab)});
+(function(){
+  let t0=null;
+  document.addEventListener("touchstart",e=>{
+    if(e.touches.length!==1){t0=null;return}
+    const p=e.touches[0];
+    // не мешаем системному жесту с края экрана и полям ввода
+    if(p.clientX<24||p.clientX>innerWidth-24||e.target.closest("input,textarea")){t0=null;return}
+    t0={x:p.clientX,y:p.clientY,t:Date.now()};
+  },{passive:true});
+  document.addEventListener("touchend",e=>{
+    if(!t0)return;
+    const p=e.changedTouches[0],dx=p.clientX-t0.x,dy=p.clientY-t0.y,dt=Date.now()-t0.t;t0=null;
+    if(Math.abs(dx)<60||Math.abs(dx)<Math.abs(dy)*1.8||dt>700)return;
+    const i=TABS.indexOf(cur)+(dx<0?1:-1);
+    if(i>=0&&i<TABS.length)goTab(TABS[i]);
+  },{passive:true});
+})();
+// Старт: всегда «Продукты» в основе истории, сохранённая вкладка — поверх
+history.replaceState(null,"",location.pathname+location.search);
+try{const t=localStorage.getItem("kr-tab");if(t&&t!=="food"&&TABS.includes(t)){history.pushState({tab:t},"","#"+t);showTab(t)}}catch(e){console.error(e)}
 
 /* ---------- Дневник: хранится в localStorage этого телефона ---------- */
 const SEV=["Нет сыпи","Немного","Средне","Сильно"];
@@ -356,6 +409,47 @@ $("#load-file").addEventListener("change",async e=>{
   }catch(err){console.error(err);alert("Не удалось прочитать файл копии.")}
 });
 entries=localLoad();renderDiary();
+
+/* ---------- Идеи: заметки по приложению, отправляются через «Поделиться» ---------- */
+const IKEY="kr-ideas";
+let ideas=[];
+try{ideas=JSON.parse(localStorage.getItem(IKEY)||"[]")}catch(e){console.error(e)}
+function ideasSave(){try{localStorage.setItem(IKEY,JSON.stringify(ideas))}catch(e){console.error(e);alert("Не удалось сохранить идею на телефоне.")}}
+function renderIdeas(){
+  const list=[...ideas].sort((a,b)=>b.at-a.at);
+  $("#ideas").innerHTML=list.length?list.map(x=>`<div class="entry"><div class="top"><span class="when">${esc(fmt(x.at))}</span>${x.sent?'<span class="pill v-yes">отправлено</span>':""}</div>
+    <p>${esc(x.text)}</p><button class="del" data-id="${esc(x.id)}">Удалить</button></div>`).join("")
+   :`<p class="empty">Пока идей нет. Пишите сюда всё, что неудобно или чего не хватает, а потом отправьте одним сообщением.</p>`;
+  const fresh=ideas.filter(x=>!x.sent).length;
+  $("#idea-note").textContent=ideas.length?(fresh?`Новых: ${fresh}`:"Все отправлены"):"";
+}
+$("#idea-form").addEventListener("submit",e=>{
+  e.preventDefault();
+  const text=$("#idea-text").value.trim();if(!text){$("#idea-text").focus();return}
+  ideas.push({id:"i"+Date.now().toString(36)+Math.random().toString(36).slice(2,6),at:Date.now(),text,sent:false});
+  ideasSave();renderIdeas();$("#idea-text").value="";
+});
+$("#ideas").addEventListener("click",e=>{
+  const b=e.target.closest(".del");if(!b)return;
+  if(b.dataset.armed!=="1"){b.dataset.armed="1";b.textContent="Точно удалить?";setTimeout(()=>{b.dataset.armed="";b.textContent="Удалить"},3000);return}
+  ideas=ideas.filter(x=>x.id!==b.dataset.id);ideasSave();renderIdeas();
+});
+$("#idea-send").addEventListener("click",()=>{
+  if(!ideas.length){$("#idea-text").focus();return}
+  // Отправляем новые; если новых нет — все. Только в Telegram: сначала приложение, если не открылось — веб-ссылка
+  const fresh=ideas.filter(x=>!x.sent),list=(fresh.length?fresh:ideas).sort((a,b)=>a.at-b.at);
+  const head="Идеи для «Можно или нельзя»",body=list.map((x,i)=>`${i+1}. ${x.text}`).join("\n");
+  const enc=encodeURIComponent;
+  let left=false;const onHide=()=>{if(document.visibilityState==="hidden")left=true};
+  document.addEventListener("visibilitychange",onHide);
+  try{location.href="tg://msg?text="+enc(head+"\n\n"+body)}catch(err){console.error(err)}
+  setTimeout(()=>{
+    document.removeEventListener("visibilitychange",onHide);
+    if(!left)window.open("https://t.me/share/url?url="+enc(head)+"&text="+enc(body),"_blank");
+  },1500);
+  for(const x of list)x.sent=true;ideasSave();renderIdeas();
+});
+renderIdeas();
 
 /* Просим браузер не чистить данные сайта и включаем офлайн-режим */
 if(navigator.storage&&navigator.storage.persist){navigator.storage.persist().catch(e=>console.error(e))}
