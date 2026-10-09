@@ -1,0 +1,365 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Можно или нельзя</title>
+<meta name="theme-color" content="#1f7a8c">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Можно?">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700&family=Unbounded:wght@600&display=swap">
+<style>
+:root{
+  --bg:#eef3f4; --surface:#ffffff; --ink:#15333a; --muted:#5d777c; --line:#d5e1e3;
+  --accent:#1f7a8c; --accent-ink:#ffffff;
+  --yes:#2f8a4e; --yes-bg:#e3f3e8; --no:#c0392b; --no-bg:#fbe6e3; --mid:#a86a00; --mid-bg:#fbf0d9;
+  --f-display:"Unbounded","Golos Text",system-ui,sans-serif;
+  --f-body:"Golos Text",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0f1c1f; --surface:#172a2e; --ink:#e3eef0; --muted:#94adb2; --line:#28434a;
+  --accent:#4fb3c6; --accent-ink:#0f1c1f;
+  --yes:#6fcf8e; --yes-bg:#173a25; --no:#f08a7e; --no-bg:#43201c; --mid:#f0bf5a; --mid-bg:#3d2f12; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f1c1f; --surface:#172a2e; --ink:#e3eef0; --muted:#94adb2; --line:#28434a;
+  --accent:#4fb3c6; --accent-ink:#0f1c1f;
+  --yes:#6fcf8e; --yes-bg:#173a25; --no:#f08a7e; --no-bg:#43201c; --mid:#f0bf5a; --mid-bg:#3d2f12; color-scheme:dark}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.5;-webkit-text-size-adjust:100%}
+[hidden]{display:none!important}
+.wrap{max-width:640px;margin:0 auto;padding-inline:max(16px,env(safe-area-inset-left,0px));padding-top:calc(20px + env(safe-area-inset-top,0px));padding-bottom:calc(48px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:18px}
+header h1{font-family:var(--f-display);font-weight:600;font-size:1.45rem;margin:0;letter-spacing:-.01em;text-wrap:balance}
+header p{margin:4px 0 0;color:var(--muted);font-size:.92rem}
+.tabs{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding-block:8px}
+.tabs button{font:inherit;font-weight:600;font-size:.92rem;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:12px;padding:10px 6px;cursor:pointer}
+.tabs button[aria-selected="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.search{width:100%;font:inherit;font-size:1.05rem;padding:14px 16px;border-radius:14px;border:1px solid var(--line);background:var(--surface);color:var(--ink)}
+.verdict{border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:2px}
+.verdict b{font-size:1.05rem}
+.v-yes{background:var(--yes-bg);color:var(--yes)} .v-no{background:var(--no-bg);color:var(--no)} .v-mid{background:var(--mid-bg);color:var(--mid)}
+.verdict span{color:var(--ink);font-size:.93rem}
+.filters{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font:inherit;font-size:.85rem;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:6px 12px;cursor:pointer}
+.chip[aria-pressed="true"]{border-color:var(--accent);color:var(--accent);font-weight:600}
+.group h2{font-size:.78rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:6px 0 6px;font-weight:600}
+.list{list-style:none;margin:0;padding:0;background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.list li{display:flex;gap:12px;align-items:flex-start;padding:11px 14px;border-top:1px solid var(--line)}
+.list li:first-child{border-top:0}
+.dot{flex:none;width:10px;height:10px;border-radius:50%;margin-top:7px}
+.d-yes{background:var(--yes)} .d-no{background:var(--no)} .d-mid{background:var(--mid)}
+.item{min-width:0} .item b{font-weight:500} .item small{display:block;color:var(--muted);font-size:.85rem;line-height:1.4}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:.85rem;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend .dot{margin:0}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:12px}
+label{font-size:.85rem;font-weight:600;color:var(--muted)}
+.field{display:flex;flex-direction:column;gap:6px}
+textarea,input[type=datetime-local]{font:inherit;font-size:1rem;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);width:100%;min-width:0}
+textarea{min-height:64px;resize:vertical}
+.scale{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.scale button{font:inherit;font-size:.85rem;padding:9px 4px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);cursor:pointer}
+.scale button[aria-pressed="true"]{border-color:var(--accent);background:var(--accent);color:var(--accent-ink);font-weight:600}
+.checks{display:flex;flex-wrap:wrap;gap:14px;font-size:.95rem}
+.checks label{color:var(--ink);font-weight:400;font-size:.95rem;display:inline-flex;gap:6px;align-items:center}
+.primary{font:inherit;font-weight:600;border:0;border-radius:12px;padding:13px;background:var(--accent);color:var(--accent-ink);cursor:pointer}
+.ghost{font:inherit;font-size:.9rem;border:1px solid var(--line);border-radius:10px;padding:8px 12px;background:var(--surface);color:var(--ink);cursor:pointer}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.note{font-size:.85rem;color:var(--muted)}
+.entries{display:flex;flex-direction:column;gap:10px}
+.entry{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:6px}
+.entry .top{display:flex;justify-content:space-between;gap:8px;align-items:center}
+.when{font-weight:600;font-variant-numeric:tabular-nums}
+.pill{font-size:.78rem;font-weight:600;border-radius:999px;padding:3px 10px;display:inline-block}
+.entry p{margin:0;font-size:.95rem;min-width:0;overflow-wrap:anywhere}
+.entry p em{font-style:normal;color:var(--muted)}
+.del{font:inherit;font-size:.8rem;background:none;border:0;color:var(--muted);cursor:pointer;padding:0;align-self:flex-start;text-decoration:underline}
+.empty{color:var(--muted);text-align:center;padding:20px;border:1px dashed var(--line);border-radius:14px}
+.memo h3{margin:0;font-size:1rem}
+.memo ul{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px}
+.alarm{background:var(--no-bg);border:1px solid var(--no);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:8px}
+.alarm h3{margin:0;color:var(--no);font-size:1rem}
+.alarm ul{margin:0;padding-left:20px}
+.alarm .num{font-family:var(--f-display);font-size:1.4rem;color:var(--no);text-decoration:none}
+.backup{background:var(--mid-bg);border:1px solid var(--mid);border-radius:14px;padding:12px 14px;font-size:.9rem;display:flex;flex-direction:column;gap:8px}
+.ver{text-align:center;font-size:.75rem;color:var(--muted)}
+@media (prefers-reduced-motion:no-preference){.tabs button,.chip,.scale button{transition:background .15s,color .15s}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Можно или нельзя</h1>
+    <p>Помощник на время крапивницы: продукты, дневник сыпи и памятка по лекарствам.</p>
+  </header>
+
+  <nav class="tabs" role="tablist">
+    <button role="tab" id="t-food" aria-selected="true" data-tab="food">Продукты</button>
+    <button role="tab" id="t-diary" aria-selected="false" data-tab="diary">Дневник</button>
+    <button role="tab" id="t-memo" aria-selected="false" data-tab="memo">Памятка</button>
+  </nav>
+
+  <section id="p-food" style="display:flex;flex-direction:column;gap:14px">
+    <input id="q" class="search" type="search" placeholder="Например: курага, печенье, сыр…" autocomplete="off">
+    <div id="verdict" hidden></div>
+    <div class="filters" id="filters">
+      <button class="chip" data-f="all" aria-pressed="true">Все</button>
+      <button class="chip" data-f="yes" aria-pressed="false">Можно</button>
+      <button class="chip" data-f="mid" aria-pressed="false">Осторожно</button>
+      <button class="chip" data-f="no" aria-pressed="false">Нельзя</button>
+    </div>
+    <div class="legend">
+      <span><i class="dot d-yes"></i>можно</span>
+      <span><i class="dot d-mid"></i>осторожно, понемногу</span>
+      <span><i class="dot d-no"></i>пока исключить</span>
+    </div>
+    <div id="groups" style="display:flex;flex-direction:column;gap:14px"></div>
+    <p class="note">Диета на 2–3 недели, пока кожа не очистится. Потом продукты из «нельзя» возвращают по одному, раз в 2–3 дня, и смотрят на реакцию в дневнике.</p>
+  </section>
+
+  <section id="p-diary" hidden style="display:flex;flex-direction:column;gap:14px">
+    <form class="card" id="form">
+      <div class="field"><label for="d-when">Когда</label><input type="datetime-local" id="d-when"></div>
+      <div class="field"><label for="d-food">Что ела</label><textarea id="d-food" placeholder="Гречка с индейкой, галетное печенье, чай"></textarea></div>
+      <div class="field">
+        <label>Сыпь</label>
+        <div class="scale" id="scale">
+          <button type="button" data-s="0" aria-pressed="true">Нет</button>
+          <button type="button" data-s="1" aria-pressed="false">Немного</button>
+          <button type="button" data-s="2" aria-pressed="false">Средне</button>
+          <button type="button" data-s="3" aria-pressed="false">Сильно</button>
+        </div>
+      </div>
+      <div class="checks">
+        <label><input type="checkbox" id="d-erius"> Выпила Эриус</label>
+        <label><input type="checkbox" id="d-poly"> Выпила Полисорб</label>
+      </div>
+      <div class="field"><label for="d-note">Заметка</label><textarea id="d-note" placeholder="Где сыпь, сколько держалась, что ещё было"></textarea></div>
+      <button class="primary" type="submit">Добавить запись</button>
+    </form>
+    <div class="backup" id="backup-hint" hidden>
+      <span>Записи хранятся только на этом телефоне. Раз в несколько дней сохраняйте копию файлом — на случай смены или сброса телефона.</span>
+    </div>
+    <div class="row">
+      <button class="ghost" type="button" id="copy">Скопировать для врача</button>
+      <button class="ghost" type="button" id="save">Сохранить копию</button>
+      <button class="ghost" type="button" id="load">Загрузить копию</button>
+      <input type="file" id="load-file" accept=".json,application/json" hidden>
+    </div>
+    <span class="note" id="store-note"></span>
+    <div class="entries" id="entries"></div>
+  </section>
+
+  <section id="p-memo" hidden style="display:flex;flex-direction:column;gap:14px">
+    <div class="alarm">
+      <h3>Сразу вызывать скорую</h3>
+      <a class="num" href="tel:103">103</a>
+      <a class="num" href="tel:112">112</a>
+      <ul>
+        <li>отекают губы, язык, веки или горло</li>
+        <li>трудно дышать или глотать, хрипы, изменился голос</li>
+        <li>сильная слабость, головокружение, обморок</li>
+      </ul>
+    </div>
+    <div class="card memo">
+      <h3>Лекарства</h3>
+      <ul>
+        <li><b>Эриус</b> каждый день в одно время, даже если сыпи нет.</li>
+        <li><b>Полисорб</b> отдельно от Эриуса, с разницей 1–2 часа: сорбент связывает лекарство.</li>
+        <li><b>Не пить</b> Ринзу и похожие средства от простуды: Колдрекс, Терафлю, Фервекс. На Ринзу был отёк губ.</li>
+        <li>Обезболивающие (ибупрофен, аспирин, диклофенак) только после разговора с врачом.</li>
+      </ul>
+    </div>
+    <div class="card memo">
+      <h3>Когда идти к врачу</h3>
+      <ul>
+        <li>Сыпь появляется, несмотря на Эриус и диету.</li>
+        <li>Крапивница держится дольше 6 недель: это повод сходить к аллергологу.</li>
+        <li>Взять с собой дневник и фото сыпи.</li>
+      </ul>
+    </div>
+    <p class="note">Подсказки собраны из общих рекомендаций и не заменяют назначения врача.</p>
+  </section>
+  <p class="ver">v1.1</p>
+</div>
+
+<script>
+const FOOD=[
+ {g:"Крупы и гарниры",items:[
+  ["Гречка","yes"],["Рис белый","yes"],["Рис бурый","yes"],["Овсянка, овсяные хлопья","yes","без добавок и ароматизаторов"],["Пшено","yes"],["Перловка","yes"],["Ячневая крупа","yes"],
+  ["Булгур","yes"],["Кукурузная крупа","yes"],["Манка","mid","понемногу"],["Киноа","mid"],["Кускус","yes"],
+  ["Макароны из твёрдых сортов","yes","только мука и вода"],["Спагетти, вермишель простые","yes"],["Яичная лапша, макароны «с яйцом»","no"],["Цветные макароны с добавками","no"],
+  ["Лапша быстрого приготовления","no"],["Каши быстрого приготовления с наполнителями","no"],["Мюсли, гранола","no","орехи, мёд, сухофрукты"],["Кукурузные хлопья, сухие завтраки","no","сахар, красители"],
+  ["Горох, фасоль, чечевица, нут","mid","понемногу, хорошо проваренные"],["Соя и соевые продукты","no"]]},
+ {g:"Хлеб и выпечка",items:[
+  ["Хлеб белый, батон","yes"],["Хлеб серый, ржаной","yes"],["Лаваш тонкий","yes"],["Хлебцы цельнозерновые","yes","без добавок"],["Сушки, баранки","yes","без мака"],["Сухари простые","yes"],
+  ["Сухарики с приправами","no"],["Хлеб с семечками, орехами, изюмом","no"],["Булочки сдобные с начинкой","no"],["Пирожки домашние с капустой, картошкой","mid","лучше печёные, не жареные"],
+  ["Блины, оладьи","mid","яйца в составе, понемногу"],["Торты, пирожные","no"],["Слойки, круассаны","no"],["Пицца","no","томаты, сыр, колбаса"]]},
+ {g:"Печенье и сладкое",items:[
+  ["Печенье галетное, «Мария»","yes"],["Крекеры без добавок","yes"],["Овсяное печенье","mid","без изюма, орехов и шоколада"],["Печенье «Юбилейное» и подобные","mid","смотреть состав"],
+  ["Печенье с шоколадом, кремом, джемом","no"],["Вафли","no","обычно с какао и ароматизаторами"],["Пряники","mid","без глазури, понемногу"],
+  ["Зефир, пастила белые","mid","простой состав, понемногу"],["Мармелад","no","красители"],["Шоколад, какао, шоколадные пасты","no"],["Конфеты","no"],
+  ["Мёд","no"],["Варенье, джем","no"],["Халва, козинаки","no","орехи и семечки"],["Мороженое","no","ароматизаторы, красители"],["Сахар","mid","в разумных количествах"],
+  ["Сгущёнка","mid","понемногу"],["Жвачка, леденцы","no"]]},
+ {g:"Фрукты",items:[
+  ["Яблоки зелёные","yes"],["Яблоки красные, жёлтые","mid","лучше очищать от кожуры"],["Печёные яблоки","yes"],["Груши","yes"],["Бананы","mid","понемногу"],
+  ["Сливы","mid"],["Абрикосы","no","вернуть одними из первых"],["Персики, нектарины","no"],["Виноград","mid"],["Хурма","mid"],["Гранат","no"],
+  ["Апельсины, мандарины","no"],["Лимон, грейпфрут","no"],["Ананас","no"],["Киви","no"],["Манго, папайя, авокадо","no"],["Дыня, арбуз","mid","понемногу"]]},
+ {g:"Ягоды",items:[
+  ["Белая черешня, белая смородина","yes"],["Крыжовник","yes"],["Черника, голубика","mid"],["Брусника, клюква","mid"],
+  ["Клубника, земляника","no"],["Малина","no"],["Вишня, черешня красная","mid"],["Чёрная смородина","mid"],["Облепиха","no"],["Ежевика","mid"]]},
+ {g:"Сухофрукты и орехи",items:[
+  ["Сушёные яблоки и груши","yes","для компота"],["Курага","no","часто обработана сернистым ангидридом (E220)"],["Изюм","no"],["Чернослив","mid","тёмный, необработанный, промыть"],
+  ["Финики, инжир","no"],["Цукаты","no"],["Орехи любые, включая арахис","no"],["Семечки подсолнечника, тыквенные","no"],["Кунжут, мак","no"]]},
+ {g:"Овощи",items:[
+  ["Кабачки","yes"],["Патиссоны","yes"],["Капуста белокочанная","yes"],["Цветная капуста","yes"],["Брокколи","yes"],["Брюссельская капуста","yes"],
+  ["Картофель","yes"],["Огурцы свежие","yes"],["Зелёный горошек","yes"],["Стручковая фасоль","yes"],["Укроп, петрушка","yes"],["Салат листовой","yes"],
+  ["Тыква","mid"],["Морковь","mid","лучше варёная"],["Свёкла","mid"],["Репа, редька, редис","mid"],["Лук, чеснок","mid","в готовых блюдах, понемногу"],["Кукуруза","mid"],
+  ["Болгарский перец","no"],["Помидоры","no"],["Баклажаны","no"],["Шпинат, щавель","no"],["Сельдерей","no"],["Грибы","no"],
+  ["Квашеная капуста","no"],["Солёные огурцы, соленья","no"],["Маринованные овощи","no"],["Овощная икра, консервированные салаты","no"]]},
+ {g:"Мясо и птица",items:[
+  ["Индейка","yes"],["Кролик","yes"],["Говядина нежирная","yes"],["Телятина","yes"],["Конина","yes"],["Курица","mid","если нет реакции"],
+  ["Свинина нежирная","mid","понемногу"],["Баранина","mid"],["Утка, гусь","no","жирное мясо"],["Субпродукты: печень, сердце","mid"],
+  ["Фарш магазинный, котлеты, пельмени","no","специи, добавки"],["Колбаса, сосиски, сардельки","no"],["Ветчина, бекон","no"],["Копчёности, сало копчёное","no"],
+  ["Тушёнка, мясные консервы","no"],["Паштеты","no"],["Шашлык, жареное мясо","no","маринады и жарка"],["Холодец","mid"]]},
+ {g:"Рыба, морепродукты, яйца",items:[
+  ["Рыба любая","no","вернуть после очищения кожи"],["Красная рыба","no"],["Икра","no"],["Креветки, кальмары, мидии","no"],["Крабовые палочки","no"],
+  ["Рыбные консервы, шпроты","no"],["Селёдка","no"],["Суши, роллы","no"],["Яйца куриные","no","особенно много"],["Перепелиные яйца","mid","понемногу"]]},
+ {g:"Молочное",items:[
+  ["Творог","yes","без добавок"],["Кефир","yes"],["Ряженка, варенец","yes"],["Простокваша","yes"],["Йогурт без добавок","yes"],["Сметана","mid","к блюдам, понемногу"],
+  ["Сливочное масло","yes"],["Молоко","mid"],["Сыр адыгейский, моцарелла, брынза","mid"],["Сыр российский, гауда молодые","mid","понемногу"],
+  ["Выдержанные сыры: пармезан, чеддер","no"],["Сыры с плесенью","no"],["Плавленые сыры","no"],["Йогурты и творожки с наполнителями","no"],
+  ["Глазированные сырки","no"],["Сливки","mid"],["Козье молоко","mid"]]},
+ {g:"Напитки",items:[
+  ["Вода негазированная","yes"],["Некрепкий чёрный чай","yes"],["Некрепкий зелёный чай","yes"],["Компот из яблок, груш, сухофруктов","yes","без кураги и изюма"],
+  ["Отвар шиповника","mid"],["Травяные чаи","mid","ромашка — тоже аллерген, осторожно"],["Кисель","mid","домашний, без красителей"],["Морс","mid","клюквенный или брусничный"],
+  ["Кофе","no"],["Крепкий чай","no"],["Какао","no"],["Газировка, лимонады","no"],["Минеральная газированная вода","mid"],
+  ["Соки цитрусовые","no"],["Соки пакетированные","no"],["Энергетики","no"],["Квас","no"],["Алкоголь любой","no"],["Вино, пиво","no","особенно провоцируют"]]},
+ {g:"Масла, соусы, приправы",items:[
+  ["Подсолнечное масло","yes"],["Оливковое масло","yes"],["Соль","yes"],["Сахар","mid"],["Лавровый лист","mid"],["Зелень укроп, петрушка","yes"],
+  ["Острый перец, чили","no"],["Чёрный перец","no"],["Горчица, хрен, васаби","no"],["Пряности, приправы, смеси специй","no"],["Кетчуп, томатная паста","no"],
+  ["Майонез","no"],["Соевый соус","no"],["Уксус","no"],["Бульонные кубики","no"],["Глутамат натрия (E621)","no"],["Корица, ваниль","mid","понемногу"]]},
+ {g:"Готовая еда и перекусы",items:[
+  ["Домашний суп на овощах или индейке","yes"],["Каша на воде или молоке","yes"],["Пюре картофельное","yes"],["Овощное рагу из разрешённых","yes"],
+  ["Борщ","mid","свёкла и томат, понемногу"],["Супы из пакетиков","no"],["Чипсы, снеки","no"],["Фастфуд, шаурма, бургеры","no"],
+  ["Готовые салаты из магазина","no"],["Замороженные полуфабрикаты","no"],["Попкорн","no"],["Жареное во фритюре","no"]]}
+];
+const LBL={yes:"Можно",no:"Пока нельзя",mid:"Осторожно"};
+let filt="all";
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+function norm(s){return s.toLowerCase().replace(/ё/g,"е")}
+function renderFood(){
+  const q=norm($("#q").value.trim());
+  let html="",hits=[];
+  for(const grp of FOOD){
+    const items=grp.items.filter(([n,s])=>(filt==="all"||s===filt)&&(!q||norm(n).includes(q)));
+    if(q) hits.push(...items);
+    if(!items.length) continue;
+    html+=`<div class="group"><h2>${esc(grp.g)}</h2><ul class="list">`+items.map(([n,s,c])=>`<li><i class="dot d-${s}"></i><div class="item"><b>${esc(n)}</b>${c?`<small>${esc(c)}</small>`:""}</div></li>`).join("")+`</ul></div>`;
+  }
+  $("#groups").innerHTML=html||`<p class="empty">Такого продукта нет в списке. Если сомневаетесь, лучше подождать или съесть совсем немного и записать в дневник.</p>`;
+  const v=$("#verdict");
+  if(q&&hits.length===1){const[n,s,c]=hits[0];v.className="verdict v-"+s;v.innerHTML=`<b>${LBL[s]}</b><span>${esc(n)}${c?". "+esc(c):""}</span>`;v.hidden=false}
+  else v.hidden=true;
+}
+$("#q").addEventListener("input",renderFood);
+$("#filters").addEventListener("click",e=>{const b=e.target.closest(".chip");if(!b)return;filt=b.dataset.f;document.querySelectorAll(".chip").forEach(c=>c.setAttribute("aria-pressed",c===b));renderFood()});
+renderFood();
+
+document.querySelector(".tabs").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;
+  document.querySelectorAll(".tabs button").forEach(t=>t.setAttribute("aria-selected",t===b));
+  for(const k of["food","diary","memo"]) $("#p-"+k).hidden=k!==b.dataset.tab;
+  try{localStorage.setItem("kr-tab",b.dataset.tab)}catch(e){console.error(e)}
+});
+try{const t=localStorage.getItem("kr-tab");if(t)document.querySelector(`[data-tab="${t}"]`)?.click()}catch(e){console.error(e)}
+
+/* ---------- Дневник: хранится в localStorage этого телефона ---------- */
+const SEV=["Нет сыпи","Немного","Средне","Сильно"];
+const SEVC=["v-yes","v-mid","v-mid","v-no"];
+const LKEY="kr-diary", BKEY="kr-backup-at";
+let sev=0, entries=[];
+function localLoad(){try{return JSON.parse(localStorage.getItem(LKEY)||"[]")}catch(e){console.error(e);return[]}}
+function localSave(){try{localStorage.setItem(LKEY,JSON.stringify(entries))}catch(e){console.error(e);alert("Не удалось сохранить запись на телефоне.")}}
+function pad(n){return String(n).padStart(2,"0")}
+function nowLocal(){const d=new Date();return`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`}
+function fmt(s){const d=new Date(s);if(isNaN(d))return s;return d.toLocaleString("ru-RU",{day:"numeric",month:"long",hour:"2-digit",minute:"2-digit"})}
+$("#d-when").value=nowLocal();
+$("#scale").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;sev=+b.dataset.s;document.querySelectorAll("#scale button").forEach(x=>x.setAttribute("aria-pressed",x===b))});
+
+function updateBackupHint(){
+  let last=0;try{last=+localStorage.getItem(BKEY)||0}catch(e){console.error(e)}
+  const newer=entries.some(x=>(x.created||0)>last);
+  $("#backup-hint").hidden=!(entries.length>=3&&newer&&Date.now()-last>3*864e5);
+  $("#store-note").textContent=last?`Последняя копия: ${new Date(last).toLocaleDateString("ru-RU",{day:"numeric",month:"long"})}.`:"Записи хранятся на этом телефоне.";
+}
+function renderDiary(){
+  const list=[...entries].sort((a,b)=>String(b.when).localeCompare(String(a.when)));
+  $("#entries").innerHTML=list.length?list.map(x=>`<div class="entry"><div class="top"><span class="when">${esc(fmt(x.when))}</span><span class="pill ${SEVC[x.sev]||"v-yes"}">${SEV[x.sev]||""}</span></div>
+    ${x.food?`<p><em>Ела:</em> ${esc(x.food)}</p>`:""}
+    ${(x.erius||x.poly)?`<p><em>Лекарства:</em> ${[x.erius?"Эриус":"",x.poly?"Полисорб":""].filter(Boolean).join(", ")}</p>`:""}
+    ${x.note?`<p><em>Заметка:</em> ${esc(x.note)}</p>`:""}
+    <button class="del" data-id="${esc(x.id)}">Удалить</button></div>`).join("")
+   :`<p class="empty">Пока записей нет. Добавьте первую: что ела сегодня и была ли сыпь.</p>`;
+  updateBackupHint();
+}
+$("#form").addEventListener("submit",e=>{
+  e.preventDefault();
+  const x={id:"e"+Date.now().toString(36)+Math.random().toString(36).slice(2,6),created:Date.now(),when:$("#d-when").value||nowLocal(),food:$("#d-food").value.trim(),sev,erius:$("#d-erius").checked,poly:$("#d-poly").checked,note:$("#d-note").value.trim()};
+  if(!x.food&&!x.note&&sev===0){$("#d-food").focus();return}
+  entries.push(x);localSave();renderDiary();
+  $("#d-food").value="";$("#d-note").value="";$("#d-erius").checked=false;$("#d-poly").checked=false;$("#d-when").value=nowLocal();
+  document.querySelector('#scale [data-s="0"]').click();
+});
+$("#entries").addEventListener("click",e=>{
+  const b=e.target.closest(".del");if(!b)return;
+  if(b.dataset.armed!=="1"){b.dataset.armed="1";b.textContent="Точно удалить?";setTimeout(()=>{b.dataset.armed="";b.textContent="Удалить"},3000);return}
+  entries=entries.filter(x=>x.id!==b.dataset.id);localSave();renderDiary();
+});
+function flash(btn,text,back){btn.textContent=text;setTimeout(()=>btn.textContent=back,2000)}
+$("#copy").addEventListener("click",async()=>{
+  const list=[...entries].sort((a,b)=>String(a.when).localeCompare(String(b.when)));
+  const txt="Дневник питания и сыпи\n\n"+list.map(x=>`${fmt(x.when)} — сыпь: ${SEV[x.sev]}\n${x.food?"Ела: "+x.food+"\n":""}${(x.erius||x.poly)?"Лекарства: "+[x.erius?"Эриус":"",x.poly?"Полисорб":""].filter(Boolean).join(", ")+"\n":""}${x.note?"Заметка: "+x.note+"\n":""}`).join("\n");
+  try{await navigator.clipboard.writeText(txt);flash($("#copy"),"Скопировано","Скопировать для врача")}
+  catch(err){console.error(err);flash($("#copy"),"Не удалось скопировать","Скопировать для врача")}
+});
+$("#save").addEventListener("click",async()=>{
+  const d=new Date(),name=`dnevnik-${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}.json`;
+  const blob=new Blob([JSON.stringify({app:"mozhno-nelzya",saved:d.toISOString(),entries},null,1)],{type:"application/json"});
+  const file=new File([blob],name,{type:"application/json"});
+  try{
+    if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:"Дневник сыпи"})}
+    else{const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),5000)}
+    try{localStorage.setItem(BKEY,String(Date.now()))}catch(e){console.error(e)}
+    updateBackupHint();
+  }catch(err){if(err&&err.name==="AbortError")return;console.error(err);flash($("#save"),"Не получилось","Сохранить копию")}
+});
+$("#load").addEventListener("click",()=>$("#load-file").click());
+$("#load-file").addEventListener("change",async e=>{
+  const f=e.target.files[0];e.target.value="";if(!f)return;
+  try{
+    const data=JSON.parse(await f.text());
+    const list=Array.isArray(data)?data:data.entries;
+    if(!Array.isArray(list))throw new Error("нет записей в файле");
+    const have=new Set(entries.map(x=>x.id));let added=0;
+    for(const x of list){if(x&&x.id&&!have.has(x.id)){entries.push(x);have.add(x.id);added++}}
+    localSave();renderDiary();
+    alert(added?`Добавлено записей: ${added}.`:"Новых записей в файле нет.");
+  }catch(err){console.error(err);alert("Не удалось прочитать файл копии.")}
+});
+entries=localLoad();renderDiary();
+
+/* Просим браузер не чистить данные сайта и включаем офлайн-режим */
+if(navigator.storage&&navigator.storage.persist){navigator.storage.persist().catch(e=>console.error(e))}
+if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").catch(e=>console.error(e))}
+</script>
+</body>
+</html>
