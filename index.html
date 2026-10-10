@@ -38,8 +38,8 @@ body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);fo
 .wrap{max-width:640px;margin:0 auto;padding-inline:max(16px,env(safe-area-inset-left,0px));padding-top:calc(20px + env(safe-area-inset-top,0px));padding-bottom:calc(48px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:18px}
 header h1{font-family:var(--f-display);font-weight:600;font-size:1.45rem;margin:0;letter-spacing:-.01em;text-wrap:balance}
 header p{margin:4px 0 0;color:var(--muted);font-size:.92rem}
-.tabs{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);display:grid;grid-template-columns:repeat(5,1fr);gap:6px;padding-block:8px}
-.tabs button{font:inherit;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:12px;padding:9px 0;cursor:pointer;min-width:0;display:flex;align-items:center;justify-content:center}
+.tabs{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);display:grid;grid-template-columns:repeat(6,1fr);gap:5px;padding-block:8px}
+.tabs button{font:inherit;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:12px;padding:9px 0;cursor:pointer;min-width:0;display:flex;align-items:center;justify-content:center;position:relative}
 .tabs svg{width:26px;height:26px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .tabs button[aria-selected="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
 button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
@@ -98,6 +98,20 @@ textarea{min-height:64px;resize:vertical}
 .dish summary{cursor:pointer;color:var(--accent);font-weight:500}
 .dish details p{margin:6px 0 0}
 .dish .ghost{align-self:flex-start}
+.badge{position:absolute;top:-5px;right:-3px;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:var(--no);color:#fff;font-size:.7rem;font-weight:700;line-height:18px;text-align:center}
+.dish .btns{display:flex;flex-wrap:wrap;gap:8px}
+.ghost.on{border-color:var(--accent);color:var(--accent);font-weight:600}
+.plan-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--line)}
+.plan-row:first-of-type{border-top:0}
+.plan-row span{flex:1;min-width:0}
+.stepper{display:flex;align-items:center;gap:6px;flex:none}
+.stepper button{font:inherit;width:32px;height:32px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);cursor:pointer;font-size:1.1rem;line-height:1}
+.stepper b{min-width:18px;text-align:center;font-variant-numeric:tabular-nums}
+.shop-list li{align-items:center;cursor:pointer}
+.shop-list input{width:20px;height:20px;flex:none;accent-color:var(--accent)}
+.shop-list .item{flex:1;display:flex;justify-content:space-between;gap:10px}
+.shop-list .qty{font-variant-numeric:tabular-nums;color:var(--muted);white-space:nowrap}
+.shop-list li.bought .item{text-decoration:line-through;color:var(--muted)}
 .ver{text-align:center;font-size:.75rem;color:var(--muted)}
 @media (prefers-reduced-motion:no-preference){.tabs button,.chip,.scale button{transition:background .15s,color .15s}
   .slide-l{animation:slide-l .22s ease-out} .slide-r{animation:slide-r .22s ease-out}
@@ -116,6 +130,7 @@ textarea{min-height:64px;resize:vertical}
   <nav class="tabs" role="tablist">
     <button role="tab" id="t-food" aria-selected="true" data-tab="food" aria-label="Продукты" title="Продукты"><svg viewBox="0 0 24 24"><path d="M12 7.5c-1.6-1.6-5.2-1.8-6.7.9C3.8 11.2 4.9 15.6 7 18.6c1.2 1.7 2.5 2.5 3.5 2.1.6-.2 1-.4 1.5-.4s.9.2 1.5.4c1 .4 2.3-.4 3.5-2.1 2.1-3 3.2-7.4 1.7-10.2-1.5-2.7-5.1-2.5-6.7-.9z"/><path d="M12 7.5c0-2 1-3.6 3-4.5"/></svg></button>
     <button role="tab" id="t-dishes" aria-selected="false" data-tab="dishes" aria-label="Блюда" title="Блюда"><svg viewBox="0 0 24 24"><circle cx="12.5" cy="12.5" r="5.5"/><path d="M3 3v5.5M5.5 3v5.5M3 8.5c0 1 .6 1.5 1.25 1.5S5.5 9.5 5.5 8.5M4.25 10v11"/><path d="M21 21V3c-1.7 1.2-2.5 3.5-2.5 7.5H21"/></svg></button>
+    <button role="tab" id="t-shop" aria-selected="false" data-tab="shop" aria-label="Покупки" title="Покупки"><svg viewBox="0 0 24 24"><path d="M3 4h2.2l2 10.4a1.6 1.6 0 0 0 1.6 1.3h8.4a1.6 1.6 0 0 0 1.6-1.2L20.6 8H6"/><circle cx="9.5" cy="19.6" r="1.3"/><circle cx="17" cy="19.6" r="1.3"/></svg><span class="badge" id="shop-badge" hidden></span></button>
     <button role="tab" id="t-diary" aria-selected="false" data-tab="diary" aria-label="Дневник" title="Дневник"><svg viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h3"/></svg></button>
     <button role="tab" id="t-memo" aria-selected="false" data-tab="memo" aria-label="Памятка" title="Памятка"><svg viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5h6v2M12 10.5v6M9 13.5h6"/></svg></button>
     <button role="tab" id="t-ideas" aria-selected="false" data-tab="ideas" aria-label="Идеи" title="Идеи"><svg viewBox="0 0 24 24"><path d="M9.5 18h5M10.5 21h3"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.7.6 1.1 1.3 1.1 2.2v.5h5V16c0-.9.4-1.6 1.1-2.2A6 6 0 0 0 12 3z"/></svg></button>
@@ -150,6 +165,22 @@ textarea{min-height:64px;resize:vertical}
     </div>
     <p class="note">Только из продуктов «можно». Соль — по вкусу, без специй и приправ.</p>
     <div id="dishes" style="display:flex;flex-direction:column;gap:10px"></div>
+  </section>
+
+  <section id="p-shop" hidden style="display:flex;flex-direction:column;gap:14px">
+    <div id="shop-empty" class="empty">Список пуст. Во вкладке «Блюда» нажмите «В список» у блюд, которые будете готовить.</div>
+    <div class="card" id="plan-card" hidden>
+      <label>Блюда и порции</label>
+      <div id="plan"></div>
+    </div>
+    <div id="shop-wrap" hidden style="display:flex;flex-direction:column;gap:10px">
+      <div class="group"><h2>Купить</h2><ul class="list shop-list" id="shop-list"></ul></div>
+      <p class="note">Граммовки примерные, на сырые продукты. Соль, воду и чай не считаем.</p>
+      <div class="row">
+        <button class="ghost" type="button" id="shop-send">Отправить в Telegram</button>
+        <button class="ghost" type="button" id="shop-clear">Очистить список</button>
+      </div>
+    </div>
   </section>
 
   <section id="p-diary" hidden style="display:flex;flex-direction:column;gap:14px">
@@ -232,7 +263,7 @@ textarea{min-height:64px;resize:vertical}
     </div>
     <div class="entries" id="ideas"></div>
   </section>
-  <p class="ver">v1.8</p>
+  <p class="ver">v1.9</p>
 </div>
 
 <script>
@@ -322,7 +353,7 @@ renderFood();
 /* ---------- Вкладки: кнопки, свайп влево/вправо, системный «назад» ----------
    «Продукты» — главный экран. С «Дневника» и «Памятки» жест «назад» возвращает на «Продукты»,
    с «Продуктов» — закрывает приложение, как обычно. */
-const TABS=["food","dishes","diary","memo","ideas"];
+const TABS=["food","dishes","shop","diary","memo","ideas"];
 let cur="food";
 function showTab(k,dir){
   if(!TABS.includes(k))k="food";
@@ -469,11 +500,8 @@ $("#ideas").addEventListener("click",e=>{
   if(b.dataset.armed!=="1"){b.dataset.armed="1";b.textContent="Точно удалить?";setTimeout(()=>{b.dataset.armed="";b.textContent="Удалить"},3000);return}
   ideas=ideas.filter(x=>x.id!==b.dataset.id);ideasSave();renderIdeas();
 });
-$("#idea-send").addEventListener("click",()=>{
-  if(!ideas.length){$("#idea-text").focus();return}
-  // Отправляем новые; если новых нет — все. Только в Telegram: сначала приложение, если не открылось — веб-ссылка
-  const fresh=ideas.filter(x=>!x.sent),list=(fresh.length?fresh:ideas).sort((a,b)=>a.at-b.at);
-  const head="Идеи для «Можно или нельзя»",body=list.map((x,i)=>`${i+1}. ${x.text}`).join("\n");
+/* Отправка только в Telegram: сначала приложение, если не открылось — веб-ссылка */
+function tgSend(head,body){
   const enc=encodeURIComponent;
   let left=false;const onHide=()=>{if(document.visibilityState==="hidden")left=true};
   document.addEventListener("visibilitychange",onHide);
@@ -482,6 +510,13 @@ $("#idea-send").addEventListener("click",()=>{
     document.removeEventListener("visibilitychange",onHide);
     if(!left)window.open("https://t.me/share/url?url="+enc(head)+"&text="+enc(body),"_blank");
   },1500);
+}
+$("#idea-send").addEventListener("click",()=>{
+  if(!ideas.length){$("#idea-text").focus();return}
+  // Отправляем новые; если новых нет — все. Только в Telegram: сначала приложение, если не открылось — веб-ссылка
+  const fresh=ideas.filter(x=>!x.sent),list=(fresh.length?fresh:ideas).sort((a,b)=>a.at-b.at);
+  const head="Идеи для «Можно или нельзя»",body=list.map((x,i)=>`${i+1}. ${x.text}`).join("\n");
+  tgSend(head,body);
   for(const x of list)x.sent=true;ideasSave();renderIdeas();
 });
 renderIdeas();
@@ -525,7 +560,7 @@ function renderDishes(){
   const q=norm($("#dq").value.trim());
   const card=([m,n,ing,how],i)=>`<div class="dish"><b>${esc(n)}</b><small>${esc(ing)}</small>
     ${how?`<details><summary>Как готовить</summary><p>${esc(how)}</p></details>`:""}
-    <button class="ghost" type="button" data-i="${i}">Съела — в дневник</button></div>`;
+    <div class="btns"><button class="ghost${plan[n]?" on":""}" type="button" data-add="${i}">${plan[n]?"В списке ✓":"В список"}</button><button class="ghost" type="button" data-i="${i}">Съела — в дневник</button></div></div>`;
   const list=DISHES.map((d,i)=>[d,i]).filter(([d])=>(!dishMeal||d[0]===dishMeal)&&(!q||norm(d[1]+" "+d[2]).includes(q)));
   let html="";
   if(dishMeal) html=list.map(([d,i])=>card(d,i)).join("");
@@ -539,13 +574,94 @@ $("#dish-meals").addEventListener("click",e=>{const b=e.target.closest(".chip");
 // При поиске ищем по всем приёмам пищи
 $("#dq").addEventListener("input",()=>{if($("#dq").value.trim())dishMeal="";renderDishes()});
 $("#dishes").addEventListener("click",e=>{
+  const a=e.target.closest("button[data-add]");
+  if(a){const n=DISHES[+a.dataset.add][1];if(plan[n])delete plan[n];else plan[n]=2;planSave();renderDishes();renderShop();return}
   const b=e.target.closest("button[data-i]");if(!b)return;
   const[m,n]=DISHES[+b.dataset.i];
   const fd=$("#d-food");fd.value=fd.value.trim()?fd.value.trim()+", "+n:n;
   setMeal(m);$("#d-when").value=nowLocal();
   goTab("diary");window.scrollTo(0,0);
 });
-dishMeal=mealByTime();renderDishes();
+/* ---------- Покупки: выбранные блюда × порции → общий список продуктов ---------- */
+// Граммовки на 1 порцию, сырые продукты. Ключ — название блюда из DISHES.
+const QTY={
+ "Овсянка с печёным яблоком":[["Овсяные хлопья",50,"г"],["Зелёные яблоки",1,"шт"],["Сливочное масло",10,"г"]],
+ "Гречка со сливочным маслом":[["Гречка",70,"г"],["Сливочное масло",10,"г"]],
+ "Пшённая каша с грушей":[["Пшено",60,"г"],["Груши",1,"шт"],["Сливочное масло",10,"г"]],
+ "Рисовая каша":[["Рис белый",60,"г"],["Молоко",50,"мл"],["Сливочное масло",10,"г"]],
+ "Кукурузная каша":[["Кукурузная крупа",60,"г"],["Сливочное масло",10,"г"]],
+ "Творог с грушей":[["Творог без добавок",150,"г"],["Груши",1,"шт"],["Кефир",50,"мл"]],
+ "Бутерброды с огурцом":[["Хлеб белый",60,"г"],["Сливочное масло",10,"г"],["Огурцы",1,"шт"],["Укроп",5,"г"]],
+ "Суп с индейкой и рисом":[["Индейка, филе",100,"г"],["Картофель",150,"г"],["Рис белый",20,"г"],["Укроп",5,"г"]],
+ "Крем-суп из кабачка и цветной капусты":[["Кабачки",200,"г"],["Цветная капуста",100,"г"],["Картофель",100,"г"],["Сливочное масло",10,"г"]],
+ "Щи из свежей капусты на говядине":[["Говядина нежирная",100,"г"],["Капуста белокочанная",150,"г"],["Картофель",100,"г"],["Укроп",5,"г"]],
+ "Суп с фрикадельками из индейки":[["Индейка, филе",100,"г"],["Рис белый",20,"г"],["Картофель",150,"г"],["Укроп",5,"г"]],
+ "Говядина тушёная с картофелем":[["Говядина нежирная",150,"г"],["Картофель",200,"г"],["Капуста белокочанная",100,"г"],["Подсолнечное масло",10,"мл"]],
+ "Кролик с кабачками":[["Кролик",200,"г"],["Картофель",150,"г"],["Кабачки",150,"г"]],
+ "Гречка с говядиной":[["Говядина нежирная",120,"г"],["Гречка",70,"г"],["Сливочное масло",10,"г"]],
+ "Индейка на пару с брокколи":[["Индейка, филе",150,"г"],["Брокколи",150,"г"],["Оливковое масло",5,"мл"]],
+ "Паровые котлеты из индейки с гречкой":[["Индейка, филе",150,"г"],["Хлеб белый",20,"г"],["Гречка",70,"г"]],
+ "Овощное рагу":[["Кабачки",150,"г"],["Картофель",150,"г"],["Капуста белокочанная",100,"г"],["Цветная капуста",100,"г"],["Подсолнечное масло",10,"мл"],["Укроп",5,"г"]],
+ "Телятина с картофельным пюре":[["Телятина",150,"г"],["Картофель",250,"г"],["Сливочное масло",15,"г"]],
+ "Рис с индейкой и горошком":[["Индейка, филе",120,"г"],["Рис белый",70,"г"],["Зелёный горошек замороженный",50,"г"],["Сливочное масло",10,"г"]],
+ "Макароны с говядиной и стручковой фасолью":[["Макароны из твёрдых сортов",80,"г"],["Говядина нежирная",100,"г"],["Стручковая фасоль",100,"г"]],
+ "Запечённая цветная капуста и кабачки":[["Цветная капуста",200,"г"],["Кабачки",200,"г"],["Оливковое масло",10,"мл"]],
+ "Печёное яблоко":[["Зелёные яблоки",1,"шт"]],
+ "Кефир с галетным печеньем":[["Кефир",200,"мл"],["Галетное печенье",30,"г"]],
+ "Творог с йогуртом":[["Творог без добавок",150,"г"],["Йогурт без добавок",100,"г"]],
+ "Компот из сушёных яблок и груш":[["Сушёные яблоки и груши",30,"г"]],
+ "Хлебцы с огурцом":[["Хлебцы без добавок",30,"г"],["Огурцы",1,"шт"],["Укроп",5,"г"]],
+ "Йогурт с крыжовником или белой черешней":[["Йогурт без добавок",150,"г"],["Крыжовник или белая черешня",100,"г"]],
+ "Салат из капусты и огурцов":[["Капуста белокочанная",150,"г"],["Огурцы",1,"шт"],["Укроп",5,"г"],["Подсолнечное масло",10,"мл"]],
+ "Сушки с некрепким чаем":[["Сушки без мака",40,"г"]],
+ "Груша":[["Груши",1,"шт"]]
+};
+const PKEY="kr-plan",BOKEY="kr-bought";
+let plan={},bought={};
+try{plan=JSON.parse(localStorage.getItem(PKEY)||"{}");bought=JSON.parse(localStorage.getItem(BOKEY)||"{}")}catch(e){console.error(e)}
+function planSave(){try{localStorage.setItem(PKEY,JSON.stringify(plan));localStorage.setItem(BOKEY,JSON.stringify(bought))}catch(e){console.error(e)}}
+function fmtQty(q,u){
+  if(u==="шт")return Math.ceil(q)+" шт";
+  const r=q<100?Math.ceil(q/5)*5:Math.ceil(q/10)*10;
+  if(r>=1000)return(Math.round(r/100)/10).toString().replace(".",",")+(u==="мл"?" л":" кг");
+  return r+" "+u;
+}
+function shopItems(){
+  const sum={};
+  for(const[n,k]of Object.entries(plan)){for(const[p,q,u]of(QTY[n]||[])){const key=p+"|"+u;sum[key]=(sum[key]||0)+q*k}}
+  return Object.entries(sum).map(([key,q])=>{const[p,u]=key.split("|");return{p,u,q,txt:fmtQty(q,u)}}).sort((a,b)=>a.p.localeCompare(b.p,"ru"));
+}
+function renderShop(){
+  const names=Object.keys(plan),items=shopItems();
+  const badge=$("#shop-badge");badge.hidden=!names.length;badge.textContent=names.length;
+  $("#shop-empty").hidden=!!names.length;$("#plan-card").hidden=!names.length;$("#shop-wrap").hidden=!names.length;
+  $("#plan").innerHTML=names.map(n=>`<div class="plan-row"><span>${esc(n)}</span><div class="stepper"><button type="button" data-step="-1" data-n="${esc(n)}" aria-label="Меньше">−</button><b>${plan[n]}</b><button type="button" data-step="1" data-n="${esc(n)}" aria-label="Больше">+</button></div></div>`).join("");
+  $("#shop-list").innerHTML=items.map(x=>`<li class="${bought[x.p]?"bought":""}"><input type="checkbox" data-p="${esc(x.p)}" ${bought[x.p]?"checked":""} aria-label="${esc(x.p)}"><div class="item"><span>${esc(x.p)}</span><span class="qty">${x.txt}</span></div></li>`).join("");
+}
+$("#plan").addEventListener("click",e=>{
+  const b=e.target.closest("button[data-step]");if(!b)return;
+  const n=b.dataset.n;plan[n]=(plan[n]||0)+ +b.dataset.step;
+  if(plan[n]<=0)delete plan[n];
+  planSave();renderShop();renderDishes();
+});
+$("#shop-list").addEventListener("click",e=>{
+  const li=e.target.closest("li");if(!li)return;
+  const cb=li.querySelector("input");if(e.target!==cb)cb.checked=!cb.checked;
+  if(cb.checked)bought[cb.dataset.p]=1;else delete bought[cb.dataset.p];
+  li.classList.toggle("bought",cb.checked);planSave();
+});
+$("#shop-send").addEventListener("click",()=>{
+  const items=shopItems().filter(x=>!bought[x.p]);
+  if(!items.length){flash($("#shop-send"),"Всё куплено","Отправить в Telegram");return}
+  const dishes=Object.entries(plan).map(([n,k])=>`${n} — ${k} порц.`).join("\n");
+  tgSend("Список покупок",items.map(x=>`▫️ ${x.p} — ${x.txt}`).join("\n")+"\n\nБлюда:\n"+dishes);
+});
+$("#shop-clear").addEventListener("click",()=>{
+  const b=$("#shop-clear");
+  if(b.dataset.armed!=="1"){b.dataset.armed="1";b.textContent="Точно очистить?";setTimeout(()=>{b.dataset.armed="";b.textContent="Очистить список"},3000);return}
+  plan={};bought={};planSave();renderShop();renderDishes();
+});
+dishMeal=mealByTime();renderDishes();renderShop();
 
 /* Просим браузер не чистить данные сайта и включаем офлайн-режим */
 if(navigator.storage&&navigator.storage.persist){navigator.storage.persist().catch(e=>console.error(e))}
