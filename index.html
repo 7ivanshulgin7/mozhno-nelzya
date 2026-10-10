@@ -38,8 +38,9 @@ body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);fo
 .wrap{max-width:640px;margin:0 auto;padding-inline:max(16px,env(safe-area-inset-left,0px));padding-top:calc(20px + env(safe-area-inset-top,0px));padding-bottom:calc(48px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:18px}
 header h1{font-family:var(--f-display);font-weight:600;font-size:1.45rem;margin:0;letter-spacing:-.01em;text-wrap:balance}
 header p{margin:4px 0 0;color:var(--muted);font-size:.92rem}
-.tabs{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding-block:8px}
-.tabs button{font:inherit;font-weight:600;font-size:.85rem;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:12px;padding:10px 6px;cursor:pointer}
+.tabs{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);display:grid;grid-template-columns:repeat(5,1fr);gap:6px;padding-block:8px}
+.tabs button{font:inherit;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:12px;padding:9px 0;cursor:pointer;min-width:0;display:flex;align-items:center;justify-content:center}
+.tabs svg{width:26px;height:26px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .tabs button[aria-selected="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
 button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 .search{width:100%;font:inherit;font-size:1.05rem;padding:14px 16px;border-radius:14px;border:1px solid var(--line);background:var(--surface);color:var(--ink)}
@@ -90,6 +91,13 @@ textarea{min-height:64px;resize:vertical}
 .alarm ul{margin:0;padding-left:20px}
 .alarm .num{font-family:var(--f-display);font-size:1.4rem;color:var(--no);text-decoration:none}
 .backup{background:var(--mid-bg);border:1px solid var(--mid);border-radius:14px;padding:12px 14px;font-size:.9rem;display:flex;flex-direction:column;gap:8px}
+.dish{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:6px}
+.dish b{font-weight:600}
+.dish small{color:var(--muted);font-size:.85rem;line-height:1.4}
+.dish details{font-size:.9rem}
+.dish summary{cursor:pointer;color:var(--accent);font-weight:500}
+.dish details p{margin:6px 0 0}
+.dish .ghost{align-self:flex-start}
 .ver{text-align:center;font-size:.75rem;color:var(--muted)}
 @media (prefers-reduced-motion:no-preference){.tabs button,.chip,.scale button{transition:background .15s,color .15s}
   .slide-l{animation:slide-l .22s ease-out} .slide-r{animation:slide-r .22s ease-out}
@@ -106,10 +114,11 @@ textarea{min-height:64px;resize:vertical}
   </header>
 
   <nav class="tabs" role="tablist">
-    <button role="tab" id="t-food" aria-selected="true" data-tab="food">Продукты</button>
-    <button role="tab" id="t-diary" aria-selected="false" data-tab="diary">Дневник</button>
-    <button role="tab" id="t-memo" aria-selected="false" data-tab="memo">Памятка</button>
-    <button role="tab" id="t-ideas" aria-selected="false" data-tab="ideas">Идеи</button>
+    <button role="tab" id="t-food" aria-selected="true" data-tab="food" aria-label="Продукты" title="Продукты"><svg viewBox="0 0 24 24"><path d="M12 7.5c-1.6-1.6-5.2-1.8-6.7.9C3.8 11.2 4.9 15.6 7 18.6c1.2 1.7 2.5 2.5 3.5 2.1.6-.2 1-.4 1.5-.4s.9.2 1.5.4c1 .4 2.3-.4 3.5-2.1 2.1-3 3.2-7.4 1.7-10.2-1.5-2.7-5.1-2.5-6.7-.9z"/><path d="M12 7.5c0-2 1-3.6 3-4.5"/></svg></button>
+    <button role="tab" id="t-dishes" aria-selected="false" data-tab="dishes" aria-label="Блюда" title="Блюда"><svg viewBox="0 0 24 24"><circle cx="12.5" cy="12.5" r="5.5"/><path d="M3 3v5.5M5.5 3v5.5M3 8.5c0 1 .6 1.5 1.25 1.5S5.5 9.5 5.5 8.5M4.25 10v11"/><path d="M21 21V3c-1.7 1.2-2.5 3.5-2.5 7.5H21"/></svg></button>
+    <button role="tab" id="t-diary" aria-selected="false" data-tab="diary" aria-label="Дневник" title="Дневник"><svg viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h3"/></svg></button>
+    <button role="tab" id="t-memo" aria-selected="false" data-tab="memo" aria-label="Памятка" title="Памятка"><svg viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5h6v2M12 10.5v6M9 13.5h6"/></svg></button>
+    <button role="tab" id="t-ideas" aria-selected="false" data-tab="ideas" aria-label="Идеи" title="Идеи"><svg viewBox="0 0 24 24"><path d="M9.5 18h5M10.5 21h3"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.7.6 1.1 1.3 1.1 2.2v.5h5V16c0-.9.4-1.6 1.1-2.2A6 6 0 0 0 12 3z"/></svg></button>
   </nav>
 
   <section id="p-food" style="display:flex;flex-direction:column;gap:14px">
@@ -130,9 +139,28 @@ textarea{min-height:64px;resize:vertical}
     <p class="note">Диета на 2–3 недели, пока кожа не очистится. Потом продукты из «нельзя» возвращают по одному, раз в 2–3 дня, и смотрят на реакцию в дневнике.</p>
   </section>
 
+  <section id="p-dishes" hidden style="display:flex;flex-direction:column;gap:14px">
+    <input id="dq" class="search" type="search" placeholder="Например: гречка, индейка, суп…" autocomplete="off">
+    <div class="filters" id="dish-meals">
+      <button class="chip" data-m="" aria-pressed="false">Все</button>
+      <button class="chip" data-m="Завтрак" aria-pressed="false">Завтрак</button>
+      <button class="chip" data-m="Обед" aria-pressed="false">Обед</button>
+      <button class="chip" data-m="Ужин" aria-pressed="false">Ужин</button>
+      <button class="chip" data-m="Перекус" aria-pressed="false">Перекус</button>
+    </div>
+    <p class="note">Только из продуктов «можно». Соль — по вкусу, без специй и приправ.</p>
+    <div id="dishes" style="display:flex;flex-direction:column;gap:10px"></div>
+  </section>
+
   <section id="p-diary" hidden style="display:flex;flex-direction:column;gap:14px">
     <form class="card" id="form">
       <div class="field"><label for="d-when">Когда</label><input type="datetime-local" id="d-when"></div>
+      <div class="scale" id="meal">
+        <button type="button" data-m="Завтрак" aria-pressed="false">Завтрак</button>
+        <button type="button" data-m="Обед" aria-pressed="false">Обед</button>
+        <button type="button" data-m="Ужин" aria-pressed="false">Ужин</button>
+        <button type="button" data-m="Перекус" aria-pressed="false">Перекус</button>
+      </div>
       <div class="field"><label for="d-food">Что ела</label><textarea id="d-food" placeholder="Гречка с индейкой, галетное печенье, чай"></textarea></div>
       <div class="field">
         <label>Сыпь</label>
@@ -204,7 +232,7 @@ textarea{min-height:64px;resize:vertical}
     </div>
     <div class="entries" id="ideas"></div>
   </section>
-  <p class="ver">v1.4</p>
+  <p class="ver">v1.8</p>
 </div>
 
 <script>
@@ -288,13 +316,13 @@ function renderFood(){
   else v.hidden=true;
 }
 $("#q").addEventListener("input",renderFood);
-$("#filters").addEventListener("click",e=>{const b=e.target.closest(".chip");if(!b)return;filt=b.dataset.f;document.querySelectorAll(".chip").forEach(c=>c.setAttribute("aria-pressed",c===b));renderFood()});
+$("#filters").addEventListener("click",e=>{const b=e.target.closest(".chip");if(!b)return;filt=b.dataset.f;document.querySelectorAll("#filters .chip").forEach(c=>c.setAttribute("aria-pressed",c===b));renderFood()});
 renderFood();
 
 /* ---------- Вкладки: кнопки, свайп влево/вправо, системный «назад» ----------
    «Продукты» — главный экран. С «Дневника» и «Памятки» жест «назад» возвращает на «Продукты»,
    с «Продуктов» — закрывает приложение, как обычно. */
-const TABS=["food","diary","memo","ideas"];
+const TABS=["food","dishes","diary","memo","ideas"];
 let cur="food";
 function showTab(k,dir){
   if(!TABS.includes(k))k="food";
@@ -346,6 +374,12 @@ function pad(n){return String(n).padStart(2,"0")}
 function nowLocal(){const d=new Date();return`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`}
 function fmt(s){const d=new Date(s);if(isNaN(d))return s;return d.toLocaleString("ru-RU",{day:"numeric",month:"long",hour:"2-digit",minute:"2-digit"})}
 $("#d-when").value=nowLocal();
+/* Приём пищи: подставляется по времени, можно сменить или снять повторным нажатием */
+let meal="";
+function setMeal(m){meal=m;document.querySelectorAll("#meal button").forEach(x=>x.setAttribute("aria-pressed",x.dataset.m===m))}
+function mealByTime(){const h=new Date().getHours();return h>=5&&h<11?"Завтрак":h>=11&&h<16?"Обед":h>=18&&h<22?"Ужин":"Перекус"}
+setMeal(mealByTime());
+$("#meal").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;setMeal(meal===b.dataset.m?"":b.dataset.m)});
 $("#scale").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;sev=+b.dataset.s;document.querySelectorAll("#scale button").forEach(x=>x.setAttribute("aria-pressed",x===b))});
 
 function updateBackupHint(){
@@ -357,7 +391,7 @@ function updateBackupHint(){
 function renderDiary(){
   const list=[...entries].sort((a,b)=>String(b.when).localeCompare(String(a.when)));
   $("#entries").innerHTML=list.length?list.map(x=>`<div class="entry"><div class="top"><span class="when">${esc(fmt(x.when))}</span><span class="pill ${SEVC[x.sev]||"v-yes"}">${SEV[x.sev]||""}</span></div>
-    ${x.food?`<p><em>Ела:</em> ${esc(x.food)}</p>`:""}
+    ${(x.food||x.meal)?`<p><em>${x.meal?esc(x.meal)+":":"Ела:"}</em> ${esc(x.food||"")}</p>`:""}
     ${(x.erius||x.poly)?`<p><em>Лекарства:</em> ${[x.erius?"Эриус":"",x.poly?"Полисорб":""].filter(Boolean).join(", ")}</p>`:""}
     ${x.note?`<p><em>Заметка:</em> ${esc(x.note)}</p>`:""}
     <button class="del" data-id="${esc(x.id)}">Удалить</button></div>`).join("")
@@ -366,11 +400,12 @@ function renderDiary(){
 }
 $("#form").addEventListener("submit",e=>{
   e.preventDefault();
-  const x={id:"e"+Date.now().toString(36)+Math.random().toString(36).slice(2,6),created:Date.now(),when:$("#d-when").value||nowLocal(),food:$("#d-food").value.trim(),sev,erius:$("#d-erius").checked,poly:$("#d-poly").checked,note:$("#d-note").value.trim()};
+  const x={id:"e"+Date.now().toString(36)+Math.random().toString(36).slice(2,6),created:Date.now(),when:$("#d-when").value||nowLocal(),meal,food:$("#d-food").value.trim(),sev,erius:$("#d-erius").checked,poly:$("#d-poly").checked,note:$("#d-note").value.trim()};
   if(!x.food&&!x.note&&sev===0){$("#d-food").focus();return}
   entries.push(x);localSave();renderDiary();
   $("#d-food").value="";$("#d-note").value="";$("#d-erius").checked=false;$("#d-poly").checked=false;$("#d-when").value=nowLocal();
   document.querySelector('#scale [data-s="0"]').click();
+  setMeal(mealByTime());
 });
 $("#entries").addEventListener("click",e=>{
   const b=e.target.closest(".del");if(!b)return;
@@ -380,7 +415,7 @@ $("#entries").addEventListener("click",e=>{
 function flash(btn,text,back){btn.textContent=text;setTimeout(()=>btn.textContent=back,2000)}
 $("#copy").addEventListener("click",async()=>{
   const list=[...entries].sort((a,b)=>String(a.when).localeCompare(String(b.when)));
-  const txt="Дневник питания и сыпи\n\n"+list.map(x=>`${fmt(x.when)} — сыпь: ${SEV[x.sev]}\n${x.food?"Ела: "+x.food+"\n":""}${(x.erius||x.poly)?"Лекарства: "+[x.erius?"Эриус":"",x.poly?"Полисорб":""].filter(Boolean).join(", ")+"\n":""}${x.note?"Заметка: "+x.note+"\n":""}`).join("\n");
+  const txt="Дневник питания и сыпи\n\n"+list.map(x=>`${fmt(x.when)} — сыпь: ${SEV[x.sev]}\n${(x.food||x.meal)?(x.meal||"Ела")+": "+(x.food||"")+"\n":""}${(x.erius||x.poly)?"Лекарства: "+[x.erius?"Эриус":"",x.poly?"Полисорб":""].filter(Boolean).join(", ")+"\n":""}${x.note?"Заметка: "+x.note+"\n":""}`).join("\n");
   try{await navigator.clipboard.writeText(txt);flash($("#copy"),"Скопировано","Скопировать для врача")}
   catch(err){console.error(err);flash($("#copy"),"Не удалось скопировать","Скопировать для врача")}
 });
@@ -450,6 +485,67 @@ $("#idea-send").addEventListener("click",()=>{
   for(const x of list)x.sent=true;ideasSave();renderIdeas();
 });
 renderIdeas();
+
+/* ---------- Блюда: только из продуктов «можно» ---------- */
+const DISHES=[
+ ["Завтрак","Овсянка с печёным яблоком","овсяные хлопья, вода, зелёное яблоко, сливочное масло","Хлопья залить кипятком 1:2, варить 5 минут. Яблоко без кожуры нарезать и потушить 5 минут с ложкой воды. Добавить к каше с кусочком масла."],
+ ["Завтрак","Гречка со сливочным маслом","гречка, вода, сливочное масло","Гречку промыть, залить водой 1:2, посолить, варить под крышкой 15–20 минут. Добавить масло."],
+ ["Завтрак","Пшённая каша с грушей","пшено, вода, груша, сливочное масло","Пшено промыть кипятком, варить в воде 1:3 около 20 минут. Добавить нарезанную грушу и масло, дать постоять 5 минут."],
+ ["Завтрак","Рисовая каша","рис белый, вода, немного молока, сливочное масло","Рис варить в воде 1:3 до мягкости, в конце можно влить немного молока. Масло по вкусу."],
+ ["Завтрак","Кукурузная каша","кукурузная крупа, вода, сливочное масло","Крупу всыпать в кипящую воду 1:4, варить на слабом огне 20–25 минут, помешивая. Масло по вкусу."],
+ ["Завтрак","Творог с грушей","творог без добавок, груша, кефир или йогурт без добавок","Грушу нарезать кубиками, смешать с творогом, полить кефиром или йогуртом."],
+ ["Завтрак","Бутерброды с огурцом","хлеб, сливочное масло, огурец, укроп","Хлеб тонко намазать маслом, сверху огурец и укроп."],
+ ["Обед","Суп с индейкой и рисом","индейка, картофель, рис, укроп, соль","Индейку залить водой, довести до кипения, первую воду слить. Варить 30 минут, добавить картофель и рис, ещё 15 минут. В конце укроп."],
+ ["Обед","Крем-суп из кабачка и цветной капусты","кабачок, цветная капуста, картофель, сливочное масло","Овощи нарезать, залить водой, варить 20 минут. Пробить блендером, добавить масло и соль."],
+ ["Обед","Щи из свежей капусты на говядине","говядина, белокочанная капуста, картофель, укроп","Говядину варить 1,5 часа, бульон после первого кипения сменить. Добавить картофель, через 10 минут капусту, варить ещё 15 минут. Укроп в тарелку."],
+ ["Обед","Суп с фрикадельками из индейки","домашний фарш из индейки, рис, картофель, укроп","Фарш посолить, скатать шарики. Картофель варить 10 минут, добавить рис и фрикадельки, варить ещё 15 минут."],
+ ["Обед","Говядина тушёная с картофелем","говядина, картофель, капуста, подсолнечное масло","Говядину нарезать, тушить в небольшом количестве воды 1 час. Добавить картофель и капусту, тушить ещё 30 минут."],
+ ["Обед","Кролик с кабачками","кролик, кабачки, картофель","Кролика тушить в воде под крышкой 1 час. Добавить картофель, через 15 минут кабачки, ещё 10 минут."],
+ ["Обед","Гречка с говядиной","говядина, гречка, сливочное масло","Говядину нарезать и тушить 40 минут. Всыпать промытую гречку, долить воды (1:2 к гречке), тушить под крышкой 20 минут."],
+ ["Ужин","Индейка на пару с брокколи","филе индейки, брокколи, оливковое масло","Индейку нарезать, готовить на пару 20 минут, брокколи добавить на последние 7 минут. Сбрызнуть маслом."],
+ ["Ужин","Паровые котлеты из индейки с гречкой","домашний фарш из индейки, белый хлеб, гречка","Хлеб размочить в воде, смешать с фаршем и солью. Сформовать котлеты, готовить на пару 25 минут. Гарнир — гречка."],
+ ["Ужин","Овощное рагу","кабачки, картофель, капуста, цветная капуста, подсолнечное масло","Картофель и капусту тушить с водой 15 минут, добавить кабачки и цветную капусту, ещё 10–15 минут. Масло и укроп в конце."],
+ ["Ужин","Телятина с картофельным пюре","телятина, картофель, сливочное масло","Телятину отварить 1–1,5 часа. Картофель сварить и размять с маслом и отваром."],
+ ["Ужин","Рис с индейкой и горошком","рис, индейка, зелёный горошек, сливочное масло","Индейку нарезать и потушить 15 минут. Добавить рис и воду 1:2, варить под крышкой 15 минут, в конце горошек и масло."],
+ ["Ужин","Макароны с говядиной и стручковой фасолью","макароны из твёрдых сортов, отварная говядина, стручковая фасоль","Макароны сварить. Фасоль отварить 7 минут. Смешать с нарезанной говядиной и каплей масла."],
+ ["Ужин","Запечённая цветная капуста и кабачки","цветная капуста, кабачки, оливковое масло","Овощи нарезать, сбрызнуть маслом, посолить, запекать при 180° 25 минут."],
+ ["Перекус","Печёное яблоко","зелёное яблоко","Вырезать сердцевину, запекать при 180° 20–25 минут."],
+ ["Перекус","Кефир с галетным печеньем","кефир или ряженка, галетное печенье",""],
+ ["Перекус","Творог с йогуртом","творог без добавок, йогурт без добавок",""],
+ ["Перекус","Компот из сушёных яблок и груш","сушёные яблоки и груши, вода","Сухофрукты промыть, залить водой, довести до кипения и варить 10 минут. Настоять 1 час. Без кураги и изюма."],
+ ["Перекус","Хлебцы с огурцом","хлебцы цельнозерновые без добавок, огурец, укроп",""],
+ ["Перекус","Йогурт с крыжовником или белой черешней","йогурт без добавок, крыжовник или белая черешня",""],
+ ["Перекус","Салат из капусты и огурцов","белокочанная капуста, огурец, укроп, подсолнечное масло","Капусту тонко нашинковать и помять с солью, добавить огурец, укроп и масло."],
+ ["Перекус","Сушки с некрепким чаем","сушки без мака, некрепкий чай",""],
+ ["Перекус","Груша","груша",""]
+];
+let dishMeal="";
+function renderDishes(){
+  document.querySelectorAll("#dish-meals .chip").forEach(c=>c.setAttribute("aria-pressed",c.dataset.m===dishMeal));
+  const q=norm($("#dq").value.trim());
+  const card=([m,n,ing,how],i)=>`<div class="dish"><b>${esc(n)}</b><small>${esc(ing)}</small>
+    ${how?`<details><summary>Как готовить</summary><p>${esc(how)}</p></details>`:""}
+    <button class="ghost" type="button" data-i="${i}">Съела — в дневник</button></div>`;
+  const list=DISHES.map((d,i)=>[d,i]).filter(([d])=>(!dishMeal||d[0]===dishMeal)&&(!q||norm(d[1]+" "+d[2]).includes(q)));
+  let html="";
+  if(dishMeal) html=list.map(([d,i])=>card(d,i)).join("");
+  else for(const m of["Завтрак","Обед","Ужин","Перекус"]){ // «Все» — по группам
+    const part=list.filter(([d])=>d[0]===m);
+    if(part.length) html+=`<div class="group" style="display:flex;flex-direction:column;gap:10px"><h2>${m}</h2>${part.map(([d,i])=>card(d,i)).join("")}</div>`;
+  }
+  $("#dishes").innerHTML=html||`<p class="empty">Таких блюд в списке нет. Напишите идею во вкладке «Идеи» — добавим.</p>`;
+}
+$("#dish-meals").addEventListener("click",e=>{const b=e.target.closest(".chip");if(!b)return;dishMeal=b.dataset.m;renderDishes()});
+// При поиске ищем по всем приёмам пищи
+$("#dq").addEventListener("input",()=>{if($("#dq").value.trim())dishMeal="";renderDishes()});
+$("#dishes").addEventListener("click",e=>{
+  const b=e.target.closest("button[data-i]");if(!b)return;
+  const[m,n]=DISHES[+b.dataset.i];
+  const fd=$("#d-food");fd.value=fd.value.trim()?fd.value.trim()+", "+n:n;
+  setMeal(m);$("#d-when").value=nowLocal();
+  goTab("diary");window.scrollTo(0,0);
+});
+dishMeal=mealByTime();renderDishes();
 
 /* Просим браузер не чистить данные сайта и включаем офлайн-режим */
 if(navigator.storage&&navigator.storage.persist){navigator.storage.persist().catch(e=>console.error(e))}
