@@ -118,6 +118,24 @@ textarea{min-height:64px;resize:vertical}
 .recipe-k{display:flex;align-items:center;gap:10px;font-size:.9rem}
 .recipe h4{margin:4px 0 0;font-size:.9rem}
 .recipe ul,.recipe ol{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:4px}
+.cook{position:fixed;inset:0;z-index:50;background:var(--bg);display:flex;flex-direction:column;gap:12px;padding:calc(12px + env(safe-area-inset-top,0px)) 16px calc(16px + env(safe-area-inset-bottom,0px));max-width:640px;margin:0 auto}
+.cook-top{display:flex;align-items:center;gap:10px}
+.cook-top b{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cook-count{color:var(--muted);font-size:.9rem;white-space:nowrap}
+.cook-x{font:inherit;font-size:1.7rem;line-height:1;background:none;border:0;color:var(--ink);padding:2px 8px;cursor:pointer}
+.cook-bar{height:4px;background:var(--line);border-radius:2px;overflow:hidden}
+.cook-bar i{display:block;height:100%;background:var(--accent);transition:width .2s}
+.cook-body{flex:1;overflow-y:auto;font-size:1.35rem;line-height:1.5;display:flex;flex-direction:column;gap:14px}
+.cook-body h3{margin:0;font-size:1.2rem}
+.cook-body ul{margin:0;padding-left:22px;font-size:1.1rem;display:flex;flex-direction:column;gap:4px}
+.cook-body .ghost{align-self:flex-start;font-size:1rem}
+.cook-timer{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px 12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.cook-timer .t{font-family:var(--f-display);font-size:1.7rem;font-variant-numeric:tabular-nums;flex:1;min-width:0}
+.cook-timer .ghost{padding:8px 9px;font-size:.85rem}
+.cook-timer.done{background:var(--no-bg);border-color:var(--no)}
+.cook-timer.done .t{color:var(--no)}
+.cook-nav{display:grid;grid-template-columns:1fr 2fr;gap:10px}
+.cook-nav button{font:inherit;font-weight:600;font-size:1.05rem;padding:16px 8px;border-radius:14px;cursor:pointer}
 .ver{text-align:center;font-size:.75rem;color:var(--muted)}
 @media (prefers-reduced-motion:no-preference){.tabs button,.chip,.scale button{transition:background .15s,color .15s}
   .slide-l{animation:slide-l .22s ease-out} .slide-r{animation:slide-r .22s ease-out}
@@ -273,7 +291,15 @@ textarea{min-height:64px;resize:vertical}
     </div>
     <div class="entries" id="ideas"></div>
   </section>
-  <p class="ver">v1.11</p>
+  <p class="ver">v1.13</p>
+</div>
+
+<div class="cook" id="cook" hidden role="dialog" aria-label="Режим готовки">
+  <div class="cook-top"><b id="cook-title"></b><span class="cook-count" id="cook-count"></span><button class="cook-x" type="button" id="cook-x" aria-label="Закрыть">×</button></div>
+  <div class="cook-bar"><i id="cook-bar"></i></div>
+  <div class="cook-body" id="cook-body"></div>
+  <div class="cook-timer" id="cook-timer" hidden><span class="t" id="cook-t"></span><button class="ghost" type="button" id="cook-pause">Пауза</button><button class="ghost" type="button" id="cook-plus">+1 мин</button><button class="ghost" type="button" id="cook-stop">Стоп</button></div>
+  <div class="cook-nav"><button class="ghost" type="button" id="cook-prev">← Назад</button><button class="primary" type="button" id="cook-next">Дальше →</button></div>
 </div>
 
 <script>
@@ -381,7 +407,7 @@ function goTab(k){
   else history.replaceState({tab:k},"","#"+k);
   showTab(k,dir);
 }
-window.addEventListener("popstate",e=>{const k=(e.state&&e.state.tab)||"food";showTab(k,TABS.indexOf(k)>TABS.indexOf(cur)?1:-1)});
+window.addEventListener("popstate",e=>{if(cook){closeCook(true);return}if(cookAfter){const fn=cookAfter;cookAfter=null;setTimeout(fn,0)}const k=(e.state&&e.state.tab)||"food";showTab(k,TABS.indexOf(k)>TABS.indexOf(cur)?1:-1)});
 document.querySelector(".tabs").addEventListener("click",e=>{const b=e.target.closest("button");if(b)goTab(b.dataset.tab)});
 (function(){
   let t0=null;
@@ -396,6 +422,7 @@ document.querySelector(".tabs").addEventListener("click",e=>{const b=e.target.cl
     if(!t0)return;
     const p=e.changedTouches[0],dx=p.clientX-t0.x,dy=p.clientY-t0.y,dt=Date.now()-t0.t;t0=null;
     if(Math.abs(dx)<60||Math.abs(dx)<Math.abs(dy)*1.8||dt>700)return;
+    if(cook){cookGo(dx<0?1:-1);return}
     const i=TABS.indexOf(cur)+(dx<0?1:-1);
     if(i>=0&&i<TABS.length)goTab(TABS[i]);
   },{passive:true});
@@ -584,6 +611,8 @@ $("#dish-meals").addEventListener("click",e=>{const b=e.target.closest(".chip");
 // При поиске ищем по всем приёмам пищи
 $("#dq").addEventListener("input",()=>{if($("#dq").value.trim())dishMeal="";renderDishes()});
 $("#dishes").addEventListener("click",e=>{
+  const ck=e.target.closest("button[data-cook]");
+  if(ck){openCook(+ck.closest(".recipe").dataset.i);return}
   const rk=e.target.closest("button[data-rxk]");
   if(rk){const box=rk.closest(".recipe"),i=+box.dataset.i,n=DISHES[i][1];rxK[n]=Math.max(1,(rxK[n]||plan[n]||2)+ +rk.dataset.rxk);box.innerHTML=rxInner(i);return}
   const a=e.target.closest("button[data-add]");
@@ -736,7 +765,7 @@ const RX={
   "Выключить, добавить укроп, 5 минут под крышкой."],tips:[
   "Бедро индейки даёт бульон вкуснее, филе — легче.","Бульонные кубики и приправы нельзя.","В холодильнике — до 2 суток."]},
  "Крем-суп из кабачка и цветной капусты":{t:"30 мин",tool:"кастрюля, погружной блендер",steps:[
-  "Картофель кубиками 1,5 см, кабачок кубиками 2 см (молодой — с кожурой), цветную капусту на соцветия.",
+  "Картофель кубиками 1,5 см, кабачок кубиками 2 см (молодой — с кожурой), цветную капусту на соцветия 2–3 см.",
   "Залить водой так, чтобы только покрыла овощи. Посолить, довести до кипения.",
   "Варить на слабом огне 20 минут до мягкости картофеля.",
   "Часть отвара слить в чашку. Пробить блендером, подливая отвар до нужной густоты.",
@@ -790,13 +819,13 @@ const RX={
   "Готовить на пару 25 минут."],tips:[
   "Яйца не добавлять — их заменяют хлеб и вымешивание.","Можно запечь в форме с 3–4 ст. л. воды под фольгой: 30 минут при 180°."]},
  "Овощное рагу":{t:"45–50 мин",tool:"кастрюля с толстым дном и крышкой: на 2 порции — 2 л, на 4 — 3–4 л",steps:[
-  "Картофель кубиками 1,5–2 см, белокочанную капусту полосками 1 см, цветную на мелкие соцветия, кабачок кубиками 2–2,5 см (молодой — с кожурой).",
+  "Картофель кубиками 1,5–2 см, белокочанную капусту полосками 1 см, цветную капусту на соцветия 2–3 см (крупные разрезать вдоль), кабачок кубиками 2–2,5 см (молодой — с кожурой).",
   "В кастрюлю воду (около 50 мл на порцию) и подсолнечное масло, затем картофель и белокочанную капусту. Посолить (½ ч. л. на 2 порции), перемешать.",
   "Накрыть, довести до кипения, убавить до слабого огня. Тушить 15 минут (на 4 порции — 20). Если на дне сухо — подлить 2–3 ст. л. воды.",
-  "Выложить сверху цветную капусту, не мешать, 5–7 минут. Потом перемешать снизу вверх.",
+  "Выложить сверху цветную капусту, не мешать, 10 минут. Потом перемешать снизу вверх и проверить ножом: соцветие должно протыкаться легко.",
   "Добавить кабачок, 8–12 минут до мягкости картофеля. Много жидкости — последние 3 минуты без крышки.",
   "Снять с огня, сливочное масло, укроп, соль по вкусу. 5 минут под крышкой."],tips:[
-  "Мешать как можно реже — кабачок останется кусочками.","Маленькая кастрюля — закладывать по очереди: овощи оседают вдвое.","Хранить до 2 суток, разогревать под крышкой с ложкой воды.","Ложка сметаны в тарелку — можно."]},
+  "Мешать как можно реже — кабачок останется кусочками.","Цветная капуста твёрдая, а остальное готово — разрезать крупные соцветия прямо в кастрюле, притопить в сок и тушить ещё 5–7 минут.","Маленькая кастрюля — закладывать по очереди: овощи оседают вдвое.","Хранить до 2 суток, разогревать под крышкой с ложкой воды.","Ложка сметаны в тарелку — можно."]},
  "Телятина с картофельным пюре":{t:"1 ч 40 мин",tool:"две кастрюли, толкушка",steps:[
   "Телятину куском залить холодной водой, довести до кипения, воду слить, залить свежей.",
   "Варить на слабом огне 1–1,5 часа, посолить за 30 минут до конца.",
@@ -820,7 +849,7 @@ const RX={
   "В составе макарон — только мука и вода, без яйца.","Говядина от щей — готовый второй ужин."]},
  "Запечённая цветная капуста и кабачки":{t:"35 мин",tool:"противень или форма, пергамент, духовка",steps:[
   "Разогреть духовку до 180°.",
-  "Цветную капусту разобрать на соцветия, кабачки нарезать кубиками 2,5 см.",
+  "Цветную капусту разобрать на соцветия 3 см, кабачки нарезать кубиками 2,5 см.",
   "В миске перемешать с маслом и солью.",
   "Выложить в один слой на пергамент, запекать 25 минут, на середине перевернуть.",
   "Готово, когда края золотистые, а нож входит легко."],tips:[
@@ -872,10 +901,99 @@ function rxInner(i){
   const n=DISHES[i][1],r=RX[n],k=rxK[n]||plan[n]||2;
   return `<div class="recipe-meta">Время: ${esc(r.t)} · Посуда: ${esc(r.tool)}</div>
     <div class="recipe-k">Порций:<div class="stepper"><button type="button" data-rxk="-1" aria-label="Меньше">−</button><b>${k}</b><button type="button" data-rxk="1" aria-label="Больше">+</button></div></div>
+    <button class="primary" type="button" data-cook="1">Готовлю — по шагам</button>
     <h4>Продукты</h4><ul>${(QTY[n]||[]).map(([p,q,u])=>`<li>${esc(p)} — ${fmtQty(q*k,u)}</li>`).join("")}<li>Соль — по вкусу</li></ul>
     <h4>Как готовить</h4><ol>${r.steps.map(x=>`<li>${esc(x)}</li>`).join("")}</ol>
     ${r.tips.length?`<h4>Советы</h4><ul>${r.tips.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>`:""}`;
 }
+/* ---------- Режим «Готовлю»: шаги по одному, таймер, экран не гаснет ---------- */
+let cook=null,cookPushed=false,cookAfter=null,tmr=null,tmrId=0,wl=null,actx=null;
+function parseMin(t){ // «8–12 минут» → 8, «1,5 часа» → 90
+  const m=t.match(/(\d+(?:,\d+)?)(?:\s*[–-]\s*\d+(?:,\d+)?)?\s*(мин|час)/);
+  if(!m)return 0;const v=parseFloat(m[1].replace(",","."));return Math.round(m[2]==="час"?v*60:v);
+}
+function cookScreens(i,k){
+  const n=DISHES[i][1],r=RX[n];
+  const prod=`<h3>Приготовьте продукты на ${k} порц.</h3><ul>${(QTY[n]||[]).map(([p,q,u])=>`<li>${esc(p)} — ${fmtQty(q*k,u)}</li>`).join("")}<li>Соль — по вкусу</li></ul><p class="note" style="margin:0">Посуда: ${esc(r.tool)}</p>`;
+  const fin=`<h3>Готово! Приятного аппетита</h3>${r.tips.length?`<ul>${r.tips.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>`:""}<button class="ghost" type="button" data-eat="1">Съела — в дневник</button>`;
+  return[{html:prod}].concat(r.steps.map(t=>({text:t})),[{html:fin}]);
+}
+function renderCook(){
+  const sc=cook.sc,p=cook.pos,last=sc.length-1,x=sc[p];
+  $("#cook-title").textContent=DISHES[cook.i][1];
+  $("#cook-count").textContent=p===0?"Продукты":p===last?"Готово":`Шаг ${p} из ${last-1}`;
+  $("#cook-bar").style.width=(p/last*100)+"%";
+  let html=x.html||`<p style="margin:0">${esc(x.text)}</p>`;
+  const min=x.text?parseMin(x.text):0;
+  if(min)html+=`<button class="ghost" type="button" data-min="${min}">Таймер ${min} мин</button>`;
+  $("#cook-body").innerHTML=html;$("#cook-body").scrollTop=0;
+  $("#cook-prev").style.visibility=p===0?"hidden":"visible";
+  $("#cook-next").textContent=p===last?"Закрыть":p===0?"Начать →":"Дальше →";
+}
+function cookGo(d){const p=cook.pos+d;if(p<0)return;if(p>cook.sc.length-1){closeCook(false);return}cook.pos=p;renderCook()}
+async function wakeOn(){try{if(navigator.wakeLock&&!wl){wl=await navigator.wakeLock.request("screen");wl.addEventListener("release",()=>{wl=null})}}catch(e){console.error(e)}}
+function openCook(i){
+  const n=DISHES[i][1],k=rxK[n]||plan[n]||2;
+  cook={i,k,pos:0,sc:cookScreens(i,k)};
+  $("#cook").hidden=false;document.body.style.overflow="hidden";
+  history.pushState(history.state,"",location.href);cookPushed=true; // «назад» закрывает режим
+  wakeOn();renderCook();
+}
+function closeCook(fromPop){
+  if(!cook)return;cook=null;stopTimer();
+  $("#cook").hidden=true;document.body.style.overflow="";
+  if(wl){wl.release().catch(e=>console.error(e));wl=null}
+  if(!fromPop&&cookPushed){cookPushed=false;history.back()}else cookPushed=false;
+}
+/* таймер считается от времени окончания — верно показывает и после сворачивания */
+function unlockAudio(){try{actx=actx||new(window.AudioContext||window.webkitAudioContext)();if(actx.state==="suspended")actx.resume()}catch(e){console.error(e)}}
+function beep(){
+  if(!actx)return;
+  try{for(let j=0;j<3;j++){const o=actx.createOscillator(),g=actx.createGain(),t0=actx.currentTime+j*.5;
+    o.frequency.value=880;o.connect(g);g.connect(actx.destination);
+    g.gain.setValueAtTime(.0001,t0);g.gain.exponentialRampToValueAtTime(.4,t0+.02);g.gain.exponentialRampToValueAtTime(.0001,t0+.35);
+    o.start(t0);o.stop(t0+.4)}}catch(e){console.error(e)}
+}
+function notify(){
+  try{
+    if(!("Notification" in window)||Notification.permission!=="granted"||!navigator.serviceWorker)return;
+    const step=cook&&cook.sc[cook.pos].text||"";
+    navigator.serviceWorker.ready.then(r=>r.showNotification("Время! "+(cook?DISHES[cook.i][1]:""),{body:step,tag:"cook-timer",renotify:true,icon:"icon-192.png",badge:"icon-192.png",vibrate:[500,200,500,200,500]})).catch(e=>console.error(e));
+  }catch(e){console.error(e)}
+}
+function alarm(){try{navigator.vibrate&&navigator.vibrate([500,200,500,200,500])}catch(e){console.error(e)}beep();if(document.visibilityState==="hidden")notify()}
+function startTimer(min){
+  unlockAudio();
+  try{if("Notification" in window&&Notification.permission==="default")Notification.requestPermission().catch(e=>console.error(e))}catch(e){console.error(e)}
+  tmr={end:Date.now()+min*6e4,left:0,run:true,done:false};
+  clearInterval(tmrId);tmrId=setInterval(tickTimer,500);tickTimer();
+}
+function tickTimer(){
+  const el=$("#cook-timer");if(!tmr){el.hidden=true;return}
+  el.hidden=false;
+  const left=tmr.run?tmr.end-Date.now():tmr.left;
+  if(left<=0&&!tmr.done){tmr.done=true;tmr.run=false;alarm()}
+  const sec=Math.max(0,Math.ceil(left/1000));
+  $("#cook-t").textContent=tmr.done?"Время!":`${Math.floor(sec/60)}:${pad(sec%60)}`;
+  el.classList.toggle("done",tmr.done);
+  $("#cook-pause").hidden=tmr.done;$("#cook-pause").textContent=tmr.run?"Пауза":"Продолжить";
+}
+function stopTimer(){clearInterval(tmrId);tmr=null;tickTimer()}
+$("#cook-pause").addEventListener("click",()=>{if(!tmr)return;if(tmr.run){tmr.left=tmr.end-Date.now();tmr.run=false}else{tmr.end=Date.now()+tmr.left;tmr.run=true}tickTimer()});
+$("#cook-plus").addEventListener("click",()=>{if(!tmr)return;if(tmr.done){startTimer(1);return}if(tmr.run)tmr.end+=6e4;else tmr.left+=6e4;tickTimer()});
+$("#cook-stop").addEventListener("click",stopTimer);
+$("#cook-x").addEventListener("click",()=>closeCook(false));
+$("#cook-prev").addEventListener("click",()=>cookGo(-1));
+$("#cook-next").addEventListener("click",()=>cookGo(1));
+$("#cook-body").addEventListener("click",e=>{
+  const t=e.target.closest("button[data-min]");if(t){startTimer(+t.dataset.min);return}
+  if(e.target.closest("button[data-eat]")){
+    const[m,n]=DISHES[cook.i];
+    cookAfter=()=>{const fd=$("#d-food");fd.value=fd.value.trim()?fd.value.trim()+", "+n:n;setMeal(m);$("#d-when").value=nowLocal();goTab("diary");window.scrollTo(0,0)};
+    closeCook(false);
+  }
+});
+document.addEventListener("visibilitychange",()=>{if(cook&&document.visibilityState==="visible"){wakeOn();tickTimer()}});
 dishMeal=mealByTime();renderDishes();renderShop();
 
 /* Просим браузер не чистить данные сайта и включаем офлайн-режим */
