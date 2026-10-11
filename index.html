@@ -82,7 +82,9 @@ textarea{min-height:64px;resize:vertical}
 .pill{font-size:.78rem;font-weight:600;border-radius:999px;padding:3px 10px;display:inline-block}
 .entry p{margin:0;font-size:.95rem;min-width:0;overflow-wrap:anywhere}
 .entry p em{font-style:normal;color:var(--muted)}
-.del{font:inherit;font-size:.8rem;background:none;border:0;color:var(--muted);cursor:pointer;padding:0;align-self:flex-start;text-decoration:underline}
+.del,.ent-edit{font:inherit;font-size:.8rem;background:none;border:0;color:var(--muted);cursor:pointer;padding:0;align-self:flex-start;text-decoration:underline}
+.ent-acts{display:flex;gap:18px}
+.entry.editing{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
 .empty{color:var(--muted);text-align:center;padding:20px;border:1px dashed var(--line);border-radius:14px}
 .memo h3{margin:0;font-size:1rem}
 .memo ul{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px}
@@ -235,7 +237,8 @@ textarea{min-height:64px;resize:vertical}
         <label><input type="checkbox" id="d-poly"> Выпила Полисорб</label>
       </div>
       <div class="field"><label for="d-note">Заметка</label><textarea id="d-note" placeholder="Где сыпь, сколько держалась, что ещё было"></textarea></div>
-      <button class="primary" type="submit">Добавить запись</button>
+      <button class="primary" type="submit" id="d-submit">Добавить запись</button>
+      <button class="ghost" type="button" id="d-cancel" hidden>Отменить изменение</button>
     </form>
     <div class="backup" id="backup-hint" hidden>
       <span>Записи хранятся только на этом телефоне. Раз в несколько дней сохраняйте копию файлом — на случай смены или сброса телефона.</span>
@@ -311,7 +314,7 @@ textarea{min-height:64px;resize:vertical}
     </div>
     <div class="entries" id="ideas"></div>
   </section>
-  <p class="ver">v1.17</p>
+  <p class="ver">v1.18</p>
 </div>
 
 <div class="cook" id="cook" hidden role="dialog" aria-label="Режим готовки">
@@ -478,27 +481,51 @@ function updateBackupHint(){
 }
 function renderDiary(){
   const list=[...entries].sort((a,b)=>String(b.when).localeCompare(String(a.when)));
-  $("#entries").innerHTML=list.length?list.map(x=>`<div class="entry"><div class="top"><span class="when">${esc(fmt(x.when))}</span><span class="pill ${SEVC[x.sev]||"v-yes"}">${SEV[x.sev]||""}</span></div>
+  $("#entries").innerHTML=list.length?list.map(x=>`<div class="entry${x.id===editId?" editing":""}"><div class="top"><span class="when">${esc(fmt(x.when))}</span><span class="pill ${SEVC[x.sev]||"v-yes"}">${SEV[x.sev]||""}</span></div>
     ${(x.food||x.meal)?`<p><em>${x.meal?esc(x.meal)+":":"Ела:"}</em> ${esc(x.food||"")}</p>`:""}
     ${(x.erius||x.poly)?`<p><em>Лекарства:</em> ${[x.erius?"Эриус":"",x.poly?"Полисорб":""].filter(Boolean).join(", ")}</p>`:""}
     ${x.note?`<p><em>Заметка:</em> ${esc(x.note)}</p>`:""}
-    <button class="del" data-id="${esc(x.id)}">Удалить</button></div>`).join("")
+    <div class="ent-acts"><button class="ent-edit" data-edit="${esc(x.id)}">Изменить</button><button class="del" data-id="${esc(x.id)}">Удалить</button></div></div>`).join("")
    :`<p class="empty">Пока записей нет. Добавьте первую: что ела сегодня и была ли сыпь.</p>`;
   updateBackupHint();
 }
-$("#form").addEventListener("submit",e=>{
-  e.preventDefault();
-  const x={id:"e"+Date.now().toString(36)+Math.random().toString(36).slice(2,6),created:Date.now(),when:$("#d-when").value||nowLocal(),meal,food:$("#d-food").value.trim(),sev,erius:$("#d-erius").checked,poly:$("#d-poly").checked,note:$("#d-note").value.trim()};
-  if(!x.food&&!x.note&&sev===0){$("#d-food").focus();return}
-  entries.push(x);localSave();renderDiary();
+/* Редактирование: запись подставляется в форму, «Сохранить изменения» обновляет её на месте */
+let editId=null;
+function resetForm(){
+  editId=null;
   $("#d-food").value="";$("#d-note").value="";$("#d-erius").checked=false;$("#d-poly").checked=false;$("#d-when").value=nowLocal();
   document.querySelector('#scale [data-s="0"]').click();
   setMeal(mealByTime());
+  $("#d-submit").textContent="Добавить запись";$("#d-cancel").hidden=true;
+}
+function startEdit(id){
+  const x=entries.find(y=>y.id===id);if(!x)return;
+  editId=id;
+  $("#d-when").value=x.when||nowLocal();setMeal(x.meal||"");
+  $("#d-food").value=x.food||"";$("#d-note").value=x.note||"";
+  $("#d-erius").checked=!!x.erius;$("#d-poly").checked=!!x.poly;
+  document.querySelector(`#scale [data-s="${x.sev||0}"]`).click();
+  $("#d-submit").textContent="Сохранить изменения";$("#d-cancel").hidden=false;
+  renderDiary();
+  $("#form").scrollIntoView({behavior:"smooth",block:"start"});
+}
+$("#form").addEventListener("submit",e=>{
+  e.preventDefault();
+  const data={when:$("#d-when").value||nowLocal(),meal,food:$("#d-food").value.trim(),sev,erius:$("#d-erius").checked,poly:$("#d-poly").checked,note:$("#d-note").value.trim()};
+  if(!data.food&&!data.note&&sev===0){$("#d-food").focus();return}
+  const old=editId&&entries.find(y=>y.id===editId);
+  if(old)Object.assign(old,data,{edited:Date.now()});
+  else entries.push(Object.assign({id:"e"+Date.now().toString(36)+Math.random().toString(36).slice(2,6),created:Date.now()},data));
+  localSave();resetForm();renderDiary();
 });
+$("#d-cancel").addEventListener("click",()=>{resetForm();renderDiary()});
 $("#entries").addEventListener("click",e=>{
+  const ed=e.target.closest(".ent-edit");if(ed){startEdit(ed.dataset.edit);return}
   const b=e.target.closest(".del");if(!b)return;
   if(b.dataset.armed!=="1"){b.dataset.armed="1";b.textContent="Точно удалить?";setTimeout(()=>{b.dataset.armed="";b.textContent="Удалить"},3000);return}
-  entries=entries.filter(x=>x.id!==b.dataset.id);localSave();renderDiary();
+  entries=entries.filter(x=>x.id!==b.dataset.id);
+  if(editId===b.dataset.id)resetForm();
+  localSave();renderDiary();
 });
 function flash(btn,text,back){btn.textContent=text;setTimeout(()=>btn.textContent=back,2000)}
 $("#copy").addEventListener("click",async()=>{
