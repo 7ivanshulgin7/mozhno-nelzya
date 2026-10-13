@@ -199,7 +199,6 @@ textarea{min-height:64px;resize:vertical}
   <section id="p-dishes" hidden style="display:flex;flex-direction:column;gap:14px">
     <input id="dq" class="search" type="search" placeholder="Например: гречка, индейка, суп…" autocomplete="off">
     <div class="filters" id="dish-meals">
-      <button class="chip" data-m="" aria-pressed="false">Все</button>
       <button class="chip" data-m="Завтрак" aria-pressed="false">Завтрак</button>
       <button class="chip" data-m="Обед" aria-pressed="false">Обед</button>
       <button class="chip" data-m="Ужин" aria-pressed="false">Ужин</button>
@@ -234,8 +233,8 @@ textarea{min-height:64px;resize:vertical}
     <div class="card meds">
       <label>Лекарства</label>
       <div class="med-btns">
-        <button type="button" data-med="Эриус">Выпила Эриус</button>
-        <button type="button" data-med="Полисорб">Выпила Полисорб</button>
+        <button type="button" data-med="Эриус">Эриус</button>
+        <button type="button" data-med="Полисорб">Полисорб</button>
       </div>
       <div class="med-when"><span>Время</span><input type="datetime-local" id="med-when" aria-label="Время приёма лекарства"></div>
       <div class="med-info" id="med-info"></div>
@@ -325,7 +324,7 @@ textarea{min-height:64px;resize:vertical}
     </div>
     <p class="note">Подсказки собраны из общих рекомендаций и не заменяют назначения врача.</p>
   </section>
-  <p class="ver">v1.26</p>
+  <p class="ver">v1.28</p>
 </div>
 
 <div class="cook" id="cook" hidden role="dialog" aria-label="Режим готовки">
@@ -520,7 +519,7 @@ function updateBackupHint(){
 }
 function renderDiary(){
   const list=[...entries].sort((a,b)=>String(b.when).localeCompare(String(a.when)));
-  $("#entries").innerHTML=list.length?list.map(x=>x.type==="med"?`<div class="entry"><div class="top"><span class="when">${esc(fmt(x.when))}</span><span class="pill v-yes">Лекарство</span></div><p><em>Выпила:</em> ${esc(x.med)}</p><div class="ent-acts"><button class="del" data-id="${esc(x.id)}">Удалить</button></div></div>`:`<div class="entry${x.id===editId?" editing":""}"><div class="top"><span class="when">${esc(fmt(x.when))}</span><span class="pill ${SEVC[x.sev]||"v-yes"}">${SEV[x.sev]||""}</span></div>
+  $("#entries").innerHTML=list.length?list.map(x=>x.type==="med"?`<div class="entry"><div class="top"><span class="when">${esc(fmt(x.when))}</span><span class="pill v-yes">Лекарство</span></div><p>${esc(x.med)}</p><div class="ent-acts"><button class="del" data-id="${esc(x.id)}">Удалить</button></div></div>`:`<div class="entry${x.id===editId?" editing":""}"><div class="top"><span class="when">${esc(fmt(x.when))}</span><span class="pill ${SEVC[x.sev]||"v-yes"}">${SEV[x.sev]||""}</span></div>
     ${(x.food||x.meal)?`<p><em>${x.meal?esc(x.meal)+":":"Ела:"}</em> ${esc(x.food||"")}</p>`:""}
     ${(x.erius||x.poly)?`<p><em>Лекарства:</em> ${[x.erius?"Эриус":"",x.poly?"Полисорб":""].filter(Boolean).join(", ")}</p>`:""}
     ${x.note?`<p><em>Заметка:</em> ${esc(x.note)}</p>`:""}
@@ -686,7 +685,7 @@ function renderDishes(){
   }
   $("#dishes").innerHTML=html||`<p class="empty">Таких блюд в списке нет.</p>`;
 }
-$("#dish-meals").addEventListener("click",e=>{const b=e.target.closest(".chip");if(!b)return;dishMeal=b.dataset.m;renderDishes()});
+$("#dish-meals").addEventListener("click",e=>{const b=e.target.closest(".chip");if(!b)return;dishMeal=dishMeal===b.dataset.m?"":b.dataset.m;renderDishes()}); // повторное нажатие — снова все
 // При поиске ищем по всем приёмам пищи
 $("#dq").addEventListener("input",()=>{if($("#dq").value.trim())dishMeal="";renderDishes()});
 $("#dishes").addEventListener("click",e=>{
@@ -1051,7 +1050,7 @@ $("#cook-body").addEventListener("click",e=>{
   }
 });
 document.addEventListener("visibilitychange",()=>{if(cook&&document.visibilityState==="visible"){wakeOn();tickTimer()}});
-dishMeal=mealByTime();renderDishes();renderShop();
+dishMeal="";renderDishes();renderShop(); // по умолчанию — все блюда
 
 /* Просим браузер не чистить данные сайта и включаем офлайн-режим */
 if(navigator.storage&&navigator.storage.persist){navigator.storage.persist().catch(e=>console.error(e))}
