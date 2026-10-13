@@ -85,7 +85,7 @@ textarea{min-height:64px;resize:vertical}
 .entry{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:6px}
 .entry .top{display:flex;justify-content:space-between;gap:8px;align-items:center}
 .when{font-weight:600;font-variant-numeric:tabular-nums}
-.pill{font-size:.78rem;font-weight:600;border-radius:999px;padding:3px 10px;display:inline-block}
+.pill{font-size:.78rem;font-weight:600;border-radius:999px;padding:3px 10px;display:inline-block;white-space:nowrap;flex:none}
 .entry p{margin:0;font-size:.95rem;min-width:0;overflow-wrap:anywhere}
 .entry p em{font-style:normal;color:var(--muted)}
 .del,.ent-edit{font:inherit;font-size:.8rem;background:none;border:0;color:var(--muted);cursor:pointer;padding:0;align-self:flex-start;text-decoration:underline}
@@ -97,6 +97,13 @@ textarea{min-height:64px;resize:vertical}
 .med-when input{flex:1;min-width:0}
 .med-info{font-size:.88rem;color:var(--muted);display:flex;flex-direction:column;gap:2px}
 .med-info b{color:var(--mid)}
+#dish-meals{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+#dish-meals .chip{padding:8px 4px;text-align:center}
+.entry.draft{border-style:dashed;background:transparent}
+.entry.draft .when{color:var(--muted);font-weight:500}
+.ent-fill{font:inherit;font-size:.9rem;font-weight:600;border:1px solid var(--accent);background:var(--accent);color:var(--accent-ink);border-radius:10px;padding:7px 14px;cursor:pointer}
+.ent-skip{font:inherit;font-size:.8rem;background:none;border:0;color:var(--muted);cursor:pointer;padding:0;text-decoration:underline}
+button.today-chip{cursor:pointer}
 .today{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
 .today-t{font-size:.85rem;font-weight:600;color:var(--muted);margin-right:2px}
 .today-chip{font:inherit;font-size:.85rem;border:1px solid var(--line);background:var(--surface);color:var(--muted);border-radius:999px;padding:6px 12px}
@@ -324,7 +331,7 @@ textarea{min-height:64px;resize:vertical}
     </div>
     <p class="note">Подсказки собраны из общих рекомендаций и не заменяют назначения врача.</p>
   </section>
-  <p class="ver">v1.28</p>
+  <p class="ver">v1.29</p>
 </div>
 
 <div class="cook" id="cook" hidden role="dialog" aria-label="Режим готовки">
@@ -490,36 +497,62 @@ const MEAL_DUE={"Завтрак":11,"Обед":16,"Ужин":21};
 function renderToday(){
   const d=new Date(),day=`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`,h=d.getHours();
   const todays=entries.filter(x=>String(x.when).startsWith(day));
-  const done=new Set(todays.filter(x=>x.type!=="med").map(x=>x.meal||mealByHour(+String(x.when).slice(11,13))));
-  let missed=0;
+  const left=entries.filter(x=>x.draft&&!x.skipped).length;
   $("#today").innerHTML=`<span class="today-t">Сегодня:</span>`+Object.keys(MEAL_DUE).map(m=>{
-    if(done.has(m))return`<span class="today-chip ok">✓ ${m}</span>`;
-    if(h>=MEAL_DUE[m]){missed++;return`<button type="button" class="today-chip miss" data-m="${m}">${m} — записать</button>`}
+    if(todays.some(x=>!x.draft&&x.type!=="med"&&mealOf(x)===m))return`<span class="today-chip ok">✓ ${m}</span>`;
+    const dr=todays.find(x=>x.draft&&x.meal===m);
+    if(dr&&dr.skipped)return`<span class="today-chip">${m} — не ела</span>`;
+    if(dr)return`<button type="button" class="today-chip${h>=MEAL_DUE[m]?" miss":""}" data-id="${dr.id}">${m} — записать</button>`;
     return`<span class="today-chip">${m}</span>`;
-  }).join("")+(todays.some(x=>x.type==="med"&&x.med==="Эриус")?'<span class="today-chip ok">✓ Эриус</span>':'<span class="today-chip">Эриус</span>');
-  const b=$("#diary-badge");b.hidden=!missed;b.textContent=missed;
+  }).join("")+(todays.some(x=>x.type==="med"&&x.med==="Эриус")?'<span class="today-chip ok">✓ Эриус</span>':'<span class="today-chip">Эриус</span>')+(left?`<span class="today-chip miss">Не заполнено: ${left}</span>`:"");
+  const b=$("#diary-badge");b.hidden=!left;b.textContent=left;
 }
 $("#today").addEventListener("click",e=>{
-  const b=e.target.closest("button[data-m]");if(!b)return;
-  if(editId)resetForm();
-  setMeal(b.dataset.m);$("#d-when").value=nowLocal();
-  $("#d-food").focus();$("#form").scrollIntoView({behavior:"smooth",block:"start"});
+  const b=e.target.closest("button[data-id]");if(b)startEdit(b.dataset.id);
 });
-document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")renderToday()});
-setInterval(renderToday,60000);
+/* открыли приложение или прошёл час — новые заготовки */
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")renderDiary()});
+setInterval(()=>{if(ensureDrafts())renderDiary();else renderToday()},60000);
 setMeal(mealByTime());
 $("#meal").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;setMeal(meal===b.dataset.m?"":b.dataset.m)});
 $("#scale").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;sev=+b.dataset.s;document.querySelectorAll("#scale button").forEach(x=>x.setAttribute("aria-pressed",x===b))});
 
 function updateBackupHint(){
   let last=0;try{last=+localStorage.getItem(BKEY)||0}catch(e){console.error(e)}
-  const newer=entries.some(x=>(x.created||0)>last);
-  $("#backup-hint").hidden=!(entries.length>=3&&newer&&Date.now()-last>3*864e5);
+  const real=entries.filter(x=>!x.draft),newer=real.some(x=>(x.created||0)>last);
+  $("#backup-hint").hidden=!(real.length>=3&&newer&&Date.now()-last>3*864e5);
   $("#store-note").textContent=last?`Последняя копия: ${new Date(last).toLocaleDateString("ru-RU",{day:"numeric",month:"long"})}.`:"Записи хранятся на этом телефоне.";
 }
+/* Заготовки: от последней записи о еде до текущего часа — Завтрак/Обед/Ужин «не заполнено» */
+const DRAFT_T={"Завтрак":"09:00","Обед":"14:00","Ужин":"19:00"};
+function dayStr(d){return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`}
+function mealOf(x){return x.meal||mealByHour(+String(x.when).slice(11,13))}
+function ensureDrafts(){
+  const sig=entries.map(x=>x.id).join(),now=new Date(),nowS=nowLocal();
+  const minS=dayStr(new Date(now.getTime()-7*864e5))+"T00:00"; // назад не больше недели
+  const real=entries.filter(x=>!x.draft&&x.type!=="med");
+  const has=(day,m)=>real.some(x=>String(x.when).startsWith(day)&&mealOf(x)===m);
+  // убрать заготовки, приём по которым уже записан, и старые «не ела»
+  entries=entries.filter(x=>!(x.draft&&((x.id!==editId&&has(String(x.when).slice(0,10),x.meal))||(x.skipped&&String(x.when)<minS))));
+  // старт — последняя запись о еде; если записей нет — начало сегодняшнего дня
+  let startS=real.map(x=>String(x.when)).filter(w=>w<=nowS).sort().pop()||dayStr(now)+"T00:00";
+  if(startS<minS)startS=minS;
+  for(const d=new Date(startS.slice(0,10)+"T00:00");dayStr(d)<=dayStr(now);d.setDate(d.getDate()+1)){
+    const day=dayStr(d);
+    for(const m of Object.keys(DRAFT_T)){
+      const w=day+"T"+DRAFT_T[m];
+      if(w<=startS||w>nowS||has(day,m)||entries.some(x=>x.draft&&x.meal===m&&String(x.when).startsWith(day)))continue;
+      entries.push({id:"d"+day+m,draft:true,meal:m,when:w,sev:0,created:0});
+    }
+  }
+  const changed=entries.map(x=>x.id).join()!==sig;
+  if(changed)localSave();
+  return changed;
+}
 function renderDiary(){
-  const list=[...entries].sort((a,b)=>String(b.when).localeCompare(String(a.when)));
-  $("#entries").innerHTML=list.length?list.map(x=>x.type==="med"?`<div class="entry"><div class="top"><span class="when">${esc(fmt(x.when))}</span><span class="pill v-yes">Лекарство</span></div><p>${esc(x.med)}</p><div class="ent-acts"><button class="del" data-id="${esc(x.id)}">Удалить</button></div></div>`:`<div class="entry${x.id===editId?" editing":""}"><div class="top"><span class="when">${esc(fmt(x.when))}</span><span class="pill ${SEVC[x.sev]||"v-yes"}">${SEV[x.sev]||""}</span></div>
+  ensureDrafts();
+  const list=[...entries].filter(x=>!x.skipped).sort((a,b)=>String(b.when).localeCompare(String(a.when)));
+  $("#entries").innerHTML=list.length?list.map(x=>x.draft?`<div class="entry draft${x.id===editId?" editing":""}"><div class="top"><span class="when">${esc(x.meal)} · ${esc(fmt(x.when))}</span><span class="pill v-mid">не заполнено</span></div><div class="ent-acts" style="align-items:center"><button class="ent-fill" data-edit="${esc(x.id)}">Заполнить</button><button class="ent-skip" data-skip="${esc(x.id)}">Не ела</button></div></div>`:x.type==="med"?`<div class="entry"><div class="top"><span class="when">${esc(fmt(x.when))}</span><span class="pill v-yes">Лекарство</span></div><p>${esc(x.med)}</p><div class="ent-acts"><button class="del" data-id="${esc(x.id)}">Удалить</button></div></div>`:`<div class="entry${x.id===editId?" editing":""}"><div class="top"><span class="when">${esc(fmt(x.when))}</span><span class="pill ${SEVC[x.sev]||"v-yes"}">${SEV[x.sev]||""}</span></div>
     ${(x.food||x.meal)?`<p><em>${x.meal?esc(x.meal)+":":"Ела:"}</em> ${esc(x.food||"")}</p>`:""}
     ${(x.erius||x.poly)?`<p><em>Лекарства:</em> ${[x.erius?"Эриус":"",x.poly?"Полисорб":""].filter(Boolean).join(", ")}</p>`:""}
     ${x.note?`<p><em>Заметка:</em> ${esc(x.note)}</p>`:""}
@@ -565,7 +598,7 @@ function startEdit(id){
   $("#d-when").value=x.when||nowLocal();setMeal(x.meal||"");
   $("#d-food").value=x.food||"";$("#d-note").value=x.note||"";
   document.querySelector(`#scale [data-s="${x.sev||0}"]`).click();
-  $("#d-submit").textContent="Сохранить изменения";$("#d-cancel").hidden=false;
+  $("#d-submit").textContent=x.draft?"Записать":"Сохранить изменения";$("#d-cancel").hidden=false;
   renderDiary();
   $("#form").scrollIntoView({behavior:"smooth",block:"start"});
 }
@@ -574,13 +607,14 @@ $("#form").addEventListener("submit",e=>{
   const data={when:$("#d-when").value||nowLocal(),meal,food:$("#d-food").value.trim(),sev,note:$("#d-note").value.trim()};
   if(!data.food&&!data.note&&sev===0){$("#d-food").focus();return}
   const old=editId&&entries.find(y=>y.id===editId);
-  if(old)Object.assign(old,data,{edited:Date.now()});
+  if(old){if(old.draft){delete old.draft;old.created=Date.now()}Object.assign(old,data,{edited:Date.now()})}
   else entries.push(Object.assign({id:"e"+Date.now().toString(36)+Math.random().toString(36).slice(2,6),created:Date.now()},data));
   localSave();resetForm();renderDiary();
 });
 $("#d-cancel").addEventListener("click",()=>{resetForm();renderDiary()});
 $("#entries").addEventListener("click",e=>{
-  const ed=e.target.closest(".ent-edit");if(ed){startEdit(ed.dataset.edit);return}
+  const ed=e.target.closest(".ent-edit,.ent-fill");if(ed){startEdit(ed.dataset.edit);return}
+  const sk=e.target.closest(".ent-skip");if(sk){const x=entries.find(y=>y.id===sk.dataset.skip);if(x){x.skipped=true;if(editId===x.id)resetForm();localSave();renderDiary()}return}
   const b=e.target.closest(".del");if(!b)return;
   if(b.dataset.armed!=="1"){b.dataset.armed="1";b.textContent="Точно удалить?";setTimeout(()=>{b.dataset.armed="";b.textContent="Удалить"},3000);return}
   entries=entries.filter(x=>x.id!==b.dataset.id);
@@ -589,7 +623,7 @@ $("#entries").addEventListener("click",e=>{
 });
 function flash(btn,text,back){btn.textContent=text;setTimeout(()=>btn.textContent=back,2000)}
 $("#copy").addEventListener("click",async()=>{
-  const list=[...entries].sort((a,b)=>String(a.when).localeCompare(String(b.when)));
+  const list=[...entries].filter(x=>!x.draft).sort((a,b)=>String(a.when).localeCompare(String(b.when)));
   const txt="Дневник питания и сыпи\n\n"+list.map(x=>x.type==="med"?`${fmt(x.when)} — выпила ${x.med}\n`:`${fmt(x.when)} — сыпь: ${SEV[x.sev]}\n${(x.food||x.meal)?(x.meal||"Ела")+": "+(x.food||"")+"\n":""}${(x.erius||x.poly)?"Лекарства: "+[x.erius?"Эриус":"",x.poly?"Полисорб":""].filter(Boolean).join(", ")+"\n":""}${x.note?"Заметка: "+x.note+"\n":""}`).join("\n");
   try{await navigator.clipboard.writeText(txt);flash($("#copy"),"Скопировано","Скопировать для врача")}
   catch(err){console.error(err);flash($("#copy"),"Не удалось скопировать","Скопировать для врача")}

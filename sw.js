@@ -1,5 +1,5 @@
 // Офлайн-кэш. При обновлении сайта поднять версию в CACHE.
-const CACHE = "mn-v1.28";
+const CACHE = "mn-v1.29";
 const FILES = ["./", "index.html", "manifest.json", "icon-180.png", "icon-192.png", "icon-512.png"];
 
 self.addEventListener("install", e => {
