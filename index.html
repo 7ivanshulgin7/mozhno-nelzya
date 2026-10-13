@@ -38,7 +38,13 @@ body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);fo
 .wrap{max-width:640px;margin:0 auto;padding-inline:max(16px,env(safe-area-inset-left,0px));padding-top:calc(20px + env(safe-area-inset-top,0px));padding-bottom:calc(48px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:18px}
 header h1{font-family:var(--f-display);font-weight:600;font-size:1.45rem;margin:0;letter-spacing:-.01em;text-wrap:balance}
 header p{margin:4px 0 0;color:var(--muted);font-size:.92rem}
-.tabs{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);display:grid;grid-template-columns:repeat(6,1fr);gap:5px;padding-block:8px}
+header{display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:14px;align-items:start}
+header h1{grid-column:1/-1;grid-row:1}
+header p{grid-column:1;grid-row:2;align-self:center}
+.sos{grid-column:2;grid-row:2;align-self:center;margin-top:4px;width:50px;height:50px;border-radius:50%;border:0;background:#c0392b;color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 0 0 4px var(--no-bg)}
+.sos svg{width:28px;height:28px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.sos[aria-pressed="true"]{box-shadow:0 0 0 4px var(--bg),0 0 0 7px #c0392b}
+.tabs{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding-block:8px}
 .tabs button{font:inherit;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:12px;padding:9px 0;cursor:pointer;min-width:0;display:flex;align-items:center;justify-content:center;position:relative}
 .tabs svg{width:26px;height:26px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .tabs button[aria-selected="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
@@ -151,16 +157,14 @@ textarea{min-height:64px;resize:vertical}
   <header>
     <h1>Можно или нельзя</h1>
     <p>Помощник на время крапивницы: продукты, дневник сыпи и памятка по лекарствам.</p>
+    <button class="sos" id="sos" type="button" aria-pressed="false" aria-label="Памятка: скорая и лекарства" title="Памятка"><svg viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5h6v2M12 10.5v6M9 13.5h6"/></svg></button>
   </header>
 
   <nav class="tabs" role="tablist">
     <button role="tab" id="t-food" aria-selected="true" data-tab="food" aria-label="Продукты" title="Продукты"><svg viewBox="0 0 24 24"><path d="M12 7.5c-1.6-1.6-5.2-1.8-6.7.9C3.8 11.2 4.9 15.6 7 18.6c1.2 1.7 2.5 2.5 3.5 2.1.6-.2 1-.4 1.5-.4s.9.2 1.5.4c1 .4 2.3-.4 3.5-2.1 2.1-3 3.2-7.4 1.7-10.2-1.5-2.7-5.1-2.5-6.7-.9z"/><path d="M12 7.5c0-2 1-3.6 3-4.5"/></svg></button>
     <button role="tab" id="t-dishes" aria-selected="false" data-tab="dishes" aria-label="Блюда" title="Блюда"><svg viewBox="0 0 24 24"><circle cx="12.5" cy="12.5" r="5.5"/><path d="M3 3v5.5M5.5 3v5.5M3 8.5c0 1 .6 1.5 1.25 1.5S5.5 9.5 5.5 8.5M4.25 10v11"/><path d="M21 21V3c-1.7 1.2-2.5 3.5-2.5 7.5H21"/></svg></button>
     <button role="tab" id="t-shop" aria-selected="false" data-tab="shop" aria-label="Покупки" title="Покупки"><svg viewBox="0 0 24 24"><path d="M3 4h2.2l2 10.4a1.6 1.6 0 0 0 1.6 1.3h8.4a1.6 1.6 0 0 0 1.6-1.2L20.6 8H6"/><circle cx="9.5" cy="19.6" r="1.3"/><circle cx="17" cy="19.6" r="1.3"/></svg><span class="badge" id="shop-badge" hidden></span></button>
-    <button role="tab" id="t-diary" aria-selected="false" data-tab="diary" aria-label="Дневник" title="Дневник"><svg viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h3"/></svg></button>
-    <button role="tab" id="t-memo" aria-selected="false" data-tab="memo" aria-label="Памятка" title="Памятка"><svg viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5h6v2M12 10.5v6M9 13.5h6"/></svg></button>
-    <button role="tab" id="t-ideas" aria-selected="false" data-tab="ideas" aria-label="Идеи" title="Идеи"><svg viewBox="0 0 24 24"><path d="M9.5 18h5M10.5 21h3"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.7.6 1.1 1.3 1.1 2.2v.5h5V16c0-.9.4-1.6 1.1-2.2A6 6 0 0 0 12 3z"/></svg></button>
-  </nav>
+    <button role="tab" id="t-diary" aria-selected="false" data-tab="diary" aria-label="Дневник" title="Дневник"><svg viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h3"/></svg></button>  </nav>
 
   <section id="p-food" style="display:flex;flex-direction:column;gap:14px">
     <input id="q" class="search" type="search" placeholder="Например: курага, печенье, сыр…" autocomplete="off">
@@ -303,18 +307,7 @@ textarea{min-height:64px;resize:vertical}
     </div>
     <p class="note">Подсказки собраны из общих рекомендаций и не заменяют назначения врача.</p>
   </section>
-  <section id="p-ideas" hidden style="display:flex;flex-direction:column;gap:14px">
-    <form class="card" id="idea-form">
-      <div class="field"><label for="idea-text">Что неудобно, что добавить или поменять</label><textarea id="idea-text" placeholder="Например: добавить гранолу без орехов; показывать, сколько дней без сыпи"></textarea></div>
-      <button class="primary" type="submit">Записать</button>
-    </form>
-    <div class="row">
-      <button class="ghost" type="button" id="idea-send">Отправить в Telegram</button>
-      <span class="note" id="idea-note"></span>
-    </div>
-    <div class="entries" id="ideas"></div>
-  </section>
-  <p class="ver">v1.18</p>
+  <p class="ver">v1.24</p>
 </div>
 
 <div class="cook" id="cook" hidden role="dialog" aria-label="Режим готовки">
@@ -409,15 +402,18 @@ $("#q").addEventListener("input",renderFood);
 $("#filters").addEventListener("click",e=>{const b=e.target.closest(".chip");if(!b)return;filt=b.dataset.f;document.querySelectorAll("#filters .chip").forEach(c=>c.setAttribute("aria-pressed",c===b));renderFood()});
 renderFood();
 
+
 /* ---------- Вкладки: кнопки, свайп влево/вправо, системный «назад» ----------
    «Продукты» — главный экран. С «Дневника» и «Памятки» жест «назад» возвращает на «Продукты»,
    с «Продуктов» — закрывает приложение, как обычно. */
-const TABS=["food","dishes","shop","diary","memo","ideas"];
+const TABS=["food","dishes","shop","diary"]; // вкладки внизу, по ним свайп
+const PAGES=TABS.concat("memo");             // + Памятка — красная кнопка в шапке
 let cur="food";
 function showTab(k,dir){
-  if(!TABS.includes(k))k="food";
+  if(!PAGES.includes(k))k="food";
   document.querySelectorAll(".tabs button").forEach(t=>t.setAttribute("aria-selected",t.dataset.tab===k));
-  for(const t of TABS) $("#p-"+t).hidden=t!==k;
+  $("#sos").setAttribute("aria-pressed",k==="memo");
+  for(const t of PAGES) $("#p-"+t).hidden=t!==k;
   if(dir&&k!==cur){const p=$("#p-"+k);p.classList.remove("slide-l","slide-r");void p.offsetWidth;p.classList.add(dir>0?"slide-l":"slide-r")}
   cur=k;
   try{localStorage.setItem("kr-tab",k)}catch(e){console.error(e)}
@@ -432,6 +428,7 @@ function goTab(k){
 }
 window.addEventListener("popstate",e=>{if(cook){closeCook(true);return}if(cookAfter){const fn=cookAfter;cookAfter=null;setTimeout(fn,0)}const k=(e.state&&e.state.tab)||"food";showTab(k,TABS.indexOf(k)>TABS.indexOf(cur)?1:-1)});
 document.querySelector(".tabs").addEventListener("click",e=>{const b=e.target.closest("button");if(b)goTab(b.dataset.tab)});
+$("#sos").addEventListener("click",()=>{goTab(cur==="memo"?"food":"memo");window.scrollTo(0,0)});
 (function(){
   let t0=null;
   document.addEventListener("touchstart",e=>{
@@ -446,6 +443,7 @@ document.querySelector(".tabs").addEventListener("click",e=>{const b=e.target.cl
     const p=e.changedTouches[0],dx=p.clientX-t0.x,dy=p.clientY-t0.y,dt=Date.now()-t0.t;t0=null;
     if(Math.abs(dx)<60||Math.abs(dx)<Math.abs(dy)*1.8||dt>700)return;
     if(cook){cookGo(dx<0?1:-1);return}
+    if(cur==="memo")return; // Памятка вне вкладок — закрывается «назад» или кнопкой
     const i=TABS.indexOf(cur)+(dx<0?1:-1);
     if(i>=0&&i<TABS.length)goTab(TABS[i]);
   },{passive:true});
@@ -560,30 +558,6 @@ $("#load-file").addEventListener("change",async e=>{
 });
 entries=localLoad();renderDiary();
 
-/* ---------- Идеи: заметки по приложению, отправляются через «Поделиться» ---------- */
-const IKEY="kr-ideas";
-let ideas=[];
-try{ideas=JSON.parse(localStorage.getItem(IKEY)||"[]")}catch(e){console.error(e)}
-function ideasSave(){try{localStorage.setItem(IKEY,JSON.stringify(ideas))}catch(e){console.error(e);alert("Не удалось сохранить идею на телефоне.")}}
-function renderIdeas(){
-  const list=[...ideas].sort((a,b)=>b.at-a.at);
-  $("#ideas").innerHTML=list.length?list.map(x=>`<div class="entry"><div class="top"><span class="when">${esc(fmt(x.at))}</span>${x.sent?'<span class="pill v-yes">отправлено</span>':""}</div>
-    <p>${esc(x.text)}</p><button class="del" data-id="${esc(x.id)}">Удалить</button></div>`).join("")
-   :`<p class="empty">Пока идей нет. Пишите сюда всё, что неудобно или чего не хватает, а потом отправьте одним сообщением.</p>`;
-  const fresh=ideas.filter(x=>!x.sent).length;
-  $("#idea-note").textContent=ideas.length?(fresh?`Новых: ${fresh}`:"Все отправлены"):"";
-}
-$("#idea-form").addEventListener("submit",e=>{
-  e.preventDefault();
-  const text=$("#idea-text").value.trim();if(!text){$("#idea-text").focus();return}
-  ideas.push({id:"i"+Date.now().toString(36)+Math.random().toString(36).slice(2,6),at:Date.now(),text,sent:false});
-  ideasSave();renderIdeas();$("#idea-text").value="";
-});
-$("#ideas").addEventListener("click",e=>{
-  const b=e.target.closest(".del");if(!b)return;
-  if(b.dataset.armed!=="1"){b.dataset.armed="1";b.textContent="Точно удалить?";setTimeout(()=>{b.dataset.armed="";b.textContent="Удалить"},3000);return}
-  ideas=ideas.filter(x=>x.id!==b.dataset.id);ideasSave();renderIdeas();
-});
 /* Отправка только в Telegram: сначала приложение, если не открылось — веб-ссылка */
 function tgSend(head,body){
   const enc=encodeURIComponent;
@@ -595,15 +569,6 @@ function tgSend(head,body){
     if(!left)window.open("https://t.me/share/url?url="+enc(head)+"&text="+enc(body),"_blank");
   },1500);
 }
-$("#idea-send").addEventListener("click",()=>{
-  if(!ideas.length){$("#idea-text").focus();return}
-  // Отправляем новые; если новых нет — все. Только в Telegram: сначала приложение, если не открылось — веб-ссылка
-  const fresh=ideas.filter(x=>!x.sent),list=(fresh.length?fresh:ideas).sort((a,b)=>a.at-b.at);
-  const head="Идеи для «Можно или нельзя»",body=list.map((x,i)=>`${i+1}. ${x.text}`).join("\n");
-  tgSend(head,body);
-  for(const x of list)x.sent=true;ideasSave();renderIdeas();
-});
-renderIdeas();
 
 /* Дата прививки в Памятке — хранится на телефоне */
 try{$("#vac-date").value=localStorage.getItem("kr-vac-date")||""}catch(e){console.error(e)}
@@ -656,7 +621,7 @@ function renderDishes(){
     const part=list.filter(([d])=>d[0]===m);
     if(part.length) html+=`<div class="group" style="display:flex;flex-direction:column;gap:10px"><h2>${m}</h2>${part.map(([d,i])=>card(d,i)).join("")}</div>`;
   }
-  $("#dishes").innerHTML=html||`<p class="empty">Таких блюд в списке нет. Напишите идею во вкладке «Идеи» — добавим.</p>`;
+  $("#dishes").innerHTML=html||`<p class="empty">Таких блюд в списке нет.</p>`;
 }
 $("#dish-meals").addEventListener("click",e=>{const b=e.target.closest(".chip");if(!b)return;dishMeal=b.dataset.m;renderDishes()});
 // При поиске ищем по всем приёмам пищи
