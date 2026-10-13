@@ -95,8 +95,10 @@ textarea{min-height:64px;resize:vertical}
 .med-btns button{font:inherit;font-weight:600;border:1px solid var(--accent);background:var(--surface);color:var(--accent);border-radius:12px;padding:12px 6px;cursor:pointer}
 .med-when{display:flex;align-items:center;gap:8px;font-size:.85rem;color:var(--muted)}
 .med-when input{flex:1;min-width:0}
-.med-info{font-size:.88rem;color:var(--muted);display:flex;flex-direction:column;gap:2px}
+.med-info{font-size:.88rem;color:var(--muted);display:flex;flex-direction:column;gap:2px;font-variant-numeric:tabular-nums}
 .med-info b{color:var(--mid)}
+.med-info strong{color:var(--ink);font-weight:600}
+.med-info .go{color:var(--yes)}
 #dish-meals{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
 #dish-meals .chip{padding:8px 4px;text-align:center}
 .entry.draft{border-style:dashed;background:transparent}
@@ -331,7 +333,7 @@ button.today-chip{cursor:pointer}
     </div>
     <p class="note">Подсказки собраны из общих рекомендаций и не заменяют назначения врача.</p>
   </section>
-  <p class="ver">v1.32</p>
+  <p class="ver">v1.35</p>
 </div>
 
 <div class="cook" id="cook" hidden role="dialog" aria-label="Режим готовки">
@@ -564,13 +566,13 @@ function renderDiary(){
 // Полисорб: после него еда и лекарства — не раньше чем через час
 function lastMed(name){return entries.filter(x=>x.type==="med"&&x.med===name).sort((a,b)=>String(b.when).localeCompare(String(a.when)))[0]}
 function hm(t){return new Date(t).toLocaleTimeString("ru-RU",{hour:"2-digit",minute:"2-digit"})}
-function dur(ms){const t=Math.max(0,Math.round(ms/1000)),h=Math.floor(t/3600),m=Math.floor(t%3600/60);return h?`${h} ч ${pad(m)} мин`:`${m}:${pad(t%60)}`}
+function dur(ms){const t=Math.max(0,Math.round(ms/1000)),h=Math.floor(t/3600),m=Math.floor(t%3600/60);return h?`${h}:${pad(m)}:${pad(t%60)}`:`${m}:${pad(t%60)}`} // живой счётчик с секундами
 function dayWord(t){const dd=Math.round((new Date(new Date(t).toDateString())-new Date(new Date().toDateString()))/864e5);return dd===0?"сегодня":dd===1?"завтра":dd===-1?"вчера":new Date(t).toLocaleDateString("ru-RU",{day:"numeric",month:"long"})}
 function renderMeds(){
   // просто два счётчика: до следующего Эриуса (раз в сутки) и час после Полисорба
   const now=Date.now(),e=lastMed("Эриус"),p=lastMed("Полисорб"),lines=[];
   if(!e)lines.push("Эриус — не отмечен");
-  else{const next=new Date(e.when).getTime()+864e5;lines.push(now<next?`Эриус — через ${dur(next-now)}`:"<b>Эриус — пора</b>")}
+  else{const next=new Date(e.when).getTime()+864e5;lines.push(now<next?`<b>Эриус — через ${dur(next-now)}</b>`:"<strong class=\"go\">Эриус — пора</strong>")}
   if(p){const t=new Date(p.when).getTime()+36e5;if(now<t)lines.push(`<b>Еда и лекарства — через ${dur(t-now)}</b>`)}
   $("#med-info").innerHTML=lines.map(l=>`<span>${l}</span>`).join("");
 }
