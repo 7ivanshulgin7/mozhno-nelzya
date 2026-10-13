@@ -90,6 +90,18 @@ textarea{min-height:64px;resize:vertical}
 .entry p em{font-style:normal;color:var(--muted)}
 .del,.ent-edit{font:inherit;font-size:.8rem;background:none;border:0;color:var(--muted);cursor:pointer;padding:0;align-self:flex-start;text-decoration:underline}
 .ent-acts{display:flex;gap:18px}
+.meds{gap:10px}
+.med-btns{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.med-btns button{font:inherit;font-weight:600;border:1px solid var(--accent);background:var(--surface);color:var(--accent);border-radius:12px;padding:12px 6px;cursor:pointer}
+.med-when{display:flex;align-items:center;gap:8px;font-size:.85rem;color:var(--muted)}
+.med-when input{flex:1;min-width:0}
+.med-info{font-size:.88rem;color:var(--muted);display:flex;flex-direction:column;gap:2px}
+.med-info b{color:var(--mid)}
+.today{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.today-t{font-size:.85rem;font-weight:600;color:var(--muted);margin-right:2px}
+.today-chip{font:inherit;font-size:.85rem;border:1px solid var(--line);background:var(--surface);color:var(--muted);border-radius:999px;padding:6px 12px}
+.today-chip.ok{background:var(--yes-bg);border-color:transparent;color:var(--yes);font-weight:600}
+.today-chip.miss{background:var(--mid-bg);border-color:var(--mid);color:var(--mid);font-weight:600;cursor:pointer}
 .entry.editing{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
 .empty{color:var(--muted);text-align:center;padding:20px;border:1px dashed var(--line);border-radius:14px}
 .memo h3{margin:0;font-size:1rem}
@@ -164,7 +176,7 @@ textarea{min-height:64px;resize:vertical}
     <button role="tab" id="t-food" aria-selected="true" data-tab="food" aria-label="Продукты" title="Продукты"><svg viewBox="0 0 24 24"><path d="M12 7.5c-1.6-1.6-5.2-1.8-6.7.9C3.8 11.2 4.9 15.6 7 18.6c1.2 1.7 2.5 2.5 3.5 2.1.6-.2 1-.4 1.5-.4s.9.2 1.5.4c1 .4 2.3-.4 3.5-2.1 2.1-3 3.2-7.4 1.7-10.2-1.5-2.7-5.1-2.5-6.7-.9z"/><path d="M12 7.5c0-2 1-3.6 3-4.5"/></svg></button>
     <button role="tab" id="t-dishes" aria-selected="false" data-tab="dishes" aria-label="Блюда" title="Блюда"><svg viewBox="0 0 24 24"><circle cx="12.5" cy="12.5" r="5.5"/><path d="M3 3v5.5M5.5 3v5.5M3 8.5c0 1 .6 1.5 1.25 1.5S5.5 9.5 5.5 8.5M4.25 10v11"/><path d="M21 21V3c-1.7 1.2-2.5 3.5-2.5 7.5H21"/></svg></button>
     <button role="tab" id="t-shop" aria-selected="false" data-tab="shop" aria-label="Покупки" title="Покупки"><svg viewBox="0 0 24 24"><path d="M3 4h2.2l2 10.4a1.6 1.6 0 0 0 1.6 1.3h8.4a1.6 1.6 0 0 0 1.6-1.2L20.6 8H6"/><circle cx="9.5" cy="19.6" r="1.3"/><circle cx="17" cy="19.6" r="1.3"/></svg><span class="badge" id="shop-badge" hidden></span></button>
-    <button role="tab" id="t-diary" aria-selected="false" data-tab="diary" aria-label="Дневник" title="Дневник"><svg viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h3"/></svg></button>  </nav>
+    <button role="tab" id="t-diary" aria-selected="false" data-tab="diary" aria-label="Дневник" title="Дневник"><svg viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h3"/></svg><span class="badge" id="diary-badge" hidden></span></button>  </nav>
 
   <section id="p-food" style="display:flex;flex-direction:column;gap:14px">
     <input id="q" class="search" type="search" placeholder="Например: курага, печенье, сыр…" autocomplete="off">
@@ -218,6 +230,16 @@ textarea{min-height:64px;resize:vertical}
   </section>
 
   <section id="p-diary" hidden style="display:flex;flex-direction:column;gap:14px">
+    <div class="today" id="today"></div>
+    <div class="card meds">
+      <label>Лекарства</label>
+      <div class="med-btns">
+        <button type="button" data-med="Эриус">Выпила Эриус</button>
+        <button type="button" data-med="Полисорб">Выпила Полисорб</button>
+      </div>
+      <div class="med-when"><span>Время</span><input type="datetime-local" id="med-when" aria-label="Время приёма лекарства"></div>
+      <div class="med-info" id="med-info"></div>
+    </div>
     <form class="card" id="form">
       <div class="field"><label for="d-when">Когда</label><input type="datetime-local" id="d-when"></div>
       <div class="scale" id="meal">
@@ -235,10 +257,6 @@ textarea{min-height:64px;resize:vertical}
           <button type="button" data-s="2" aria-pressed="false">Средне</button>
           <button type="button" data-s="3" aria-pressed="false">Сильно</button>
         </div>
-      </div>
-      <div class="checks">
-        <label><input type="checkbox" id="d-erius"> Выпила Эриус</label>
-        <label><input type="checkbox" id="d-poly"> Выпила Полисорб</label>
       </div>
       <div class="field"><label for="d-note">Заметка</label><textarea id="d-note" placeholder="Где сыпь, сколько держалась, что ещё было"></textarea></div>
       <button class="primary" type="submit" id="d-submit">Добавить запись</button>
@@ -307,7 +325,7 @@ textarea{min-height:64px;resize:vertical}
     </div>
     <p class="note">Подсказки собраны из общих рекомендаций и не заменяют назначения врача.</p>
   </section>
-  <p class="ver">v1.24</p>
+  <p class="ver">v1.26</p>
 </div>
 
 <div class="cook" id="cook" hidden role="dialog" aria-label="Режим готовки">
@@ -466,7 +484,30 @@ $("#d-when").value=nowLocal();
 /* Приём пищи: подставляется по времени, можно сменить или снять повторным нажатием */
 let meal="";
 function setMeal(m){meal=m;document.querySelectorAll("#meal button").forEach(x=>x.setAttribute("aria-pressed",x.dataset.m===m))}
-function mealByTime(){const h=new Date().getHours();return h>=5&&h<11?"Завтрак":h>=11&&h<16?"Обед":h>=18&&h<22?"Ужин":"Перекус"}
+function mealByHour(h){return h>=5&&h<11?"Завтрак":h>=11&&h<16?"Обед":h>=18&&h<22?"Ужин":"Перекус"}
+function mealByTime(){return mealByHour(new Date().getHours())}
+/* «Сегодня»: какие приёмы пищи записаны; пропущенные (время прошло) — жёлтым и цифрой на иконке дневника */
+const MEAL_DUE={"Завтрак":11,"Обед":16,"Ужин":21};
+function renderToday(){
+  const d=new Date(),day=`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`,h=d.getHours();
+  const todays=entries.filter(x=>String(x.when).startsWith(day));
+  const done=new Set(todays.filter(x=>x.type!=="med").map(x=>x.meal||mealByHour(+String(x.when).slice(11,13))));
+  let missed=0;
+  $("#today").innerHTML=`<span class="today-t">Сегодня:</span>`+Object.keys(MEAL_DUE).map(m=>{
+    if(done.has(m))return`<span class="today-chip ok">✓ ${m}</span>`;
+    if(h>=MEAL_DUE[m]){missed++;return`<button type="button" class="today-chip miss" data-m="${m}">${m} — записать</button>`}
+    return`<span class="today-chip">${m}</span>`;
+  }).join("")+(todays.some(x=>x.type==="med"&&x.med==="Эриус")?'<span class="today-chip ok">✓ Эриус</span>':'<span class="today-chip">Эриус</span>');
+  const b=$("#diary-badge");b.hidden=!missed;b.textContent=missed;
+}
+$("#today").addEventListener("click",e=>{
+  const b=e.target.closest("button[data-m]");if(!b)return;
+  if(editId)resetForm();
+  setMeal(b.dataset.m);$("#d-when").value=nowLocal();
+  $("#d-food").focus();$("#form").scrollIntoView({behavior:"smooth",block:"start"});
+});
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")renderToday()});
+setInterval(renderToday,60000);
 setMeal(mealByTime());
 $("#meal").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;setMeal(meal===b.dataset.m?"":b.dataset.m)});
 $("#scale").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;sev=+b.dataset.s;document.querySelectorAll("#scale button").forEach(x=>x.setAttribute("aria-pressed",x===b))});
@@ -479,19 +520,42 @@ function updateBackupHint(){
 }
 function renderDiary(){
   const list=[...entries].sort((a,b)=>String(b.when).localeCompare(String(a.when)));
-  $("#entries").innerHTML=list.length?list.map(x=>`<div class="entry${x.id===editId?" editing":""}"><div class="top"><span class="when">${esc(fmt(x.when))}</span><span class="pill ${SEVC[x.sev]||"v-yes"}">${SEV[x.sev]||""}</span></div>
+  $("#entries").innerHTML=list.length?list.map(x=>x.type==="med"?`<div class="entry"><div class="top"><span class="when">${esc(fmt(x.when))}</span><span class="pill v-yes">Лекарство</span></div><p><em>Выпила:</em> ${esc(x.med)}</p><div class="ent-acts"><button class="del" data-id="${esc(x.id)}">Удалить</button></div></div>`:`<div class="entry${x.id===editId?" editing":""}"><div class="top"><span class="when">${esc(fmt(x.when))}</span><span class="pill ${SEVC[x.sev]||"v-yes"}">${SEV[x.sev]||""}</span></div>
     ${(x.food||x.meal)?`<p><em>${x.meal?esc(x.meal)+":":"Ела:"}</em> ${esc(x.food||"")}</p>`:""}
     ${(x.erius||x.poly)?`<p><em>Лекарства:</em> ${[x.erius?"Эриус":"",x.poly?"Полисорб":""].filter(Boolean).join(", ")}</p>`:""}
     ${x.note?`<p><em>Заметка:</em> ${esc(x.note)}</p>`:""}
     <div class="ent-acts"><button class="ent-edit" data-edit="${esc(x.id)}">Изменить</button><button class="del" data-id="${esc(x.id)}">Удалить</button></div></div>`).join("")
    :`<p class="empty">Пока записей нет. Добавьте первую: что ела сегодня и была ли сыпь.</p>`;
-  updateBackupHint();
+  updateBackupHint();renderToday();renderMeds();
 }
+/* ---------- Лекарства: отдельные записи type:"med" ---------- */
+// Полисорб отдельно: от еды — 1 час, от Эриуса — 2 часа (в Памятке «с разницей 1–2 часа»)
+function lastMed(name){return entries.filter(x=>x.type==="med"&&x.med===name).sort((a,b)=>String(b.when).localeCompare(String(a.when)))[0]}
+function hm(t){return new Date(t).toLocaleTimeString("ru-RU",{hour:"2-digit",minute:"2-digit"})}
+function renderMeds(){
+  const now=Date.now(),lines=[];
+  for(const n of["Эриус","Полисорб"]){const x=lastMed(n);lines.push(`${n}: ${x?fmt(x.when):"ещё не отмечен"}`)}
+  const p=lastMed("Полисорб"),e=lastMed("Эриус");
+  if(p){const t=new Date(p.when).getTime();
+    if(now<t+36e5)lines.push(`<b>Еда — не раньше ${hm(t+36e5)}</b>`);
+    if(now<t+72e5)lines.push(`<b>Эриус — не раньше ${hm(t+72e5)}</b>`)}
+  if(e){const t=new Date(e.when).getTime();if(now<t+72e5)lines.push(`<b>Полисорб — не раньше ${hm(t+72e5)}</b>`)}
+  $("#med-info").innerHTML=lines.map(l=>`<span>${l}</span>`).join("");
+}
+$("#med-when").value=nowLocal();
+document.querySelector(".med-btns").addEventListener("click",ev=>{
+  const b=ev.target.closest("button[data-med]");if(!b)return;
+  entries.push({id:"m"+Date.now().toString(36)+Math.random().toString(36).slice(2,6),created:Date.now(),type:"med",med:b.dataset.med,when:$("#med-when").value||nowLocal()});
+  localSave();renderDiary();$("#med-when").value=nowLocal();
+  const t=b.textContent;b.textContent="Записано ✓";setTimeout(()=>b.textContent=t,1500);
+});
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"){$("#med-when").value=nowLocal();renderMeds()}});
+setInterval(renderMeds,60000);
 /* Редактирование: запись подставляется в форму, «Сохранить изменения» обновляет её на месте */
 let editId=null;
 function resetForm(){
   editId=null;
-  $("#d-food").value="";$("#d-note").value="";$("#d-erius").checked=false;$("#d-poly").checked=false;$("#d-when").value=nowLocal();
+  $("#d-food").value="";$("#d-note").value="";$("#d-when").value=nowLocal();
   document.querySelector('#scale [data-s="0"]').click();
   setMeal(mealByTime());
   $("#d-submit").textContent="Добавить запись";$("#d-cancel").hidden=true;
@@ -501,7 +565,6 @@ function startEdit(id){
   editId=id;
   $("#d-when").value=x.when||nowLocal();setMeal(x.meal||"");
   $("#d-food").value=x.food||"";$("#d-note").value=x.note||"";
-  $("#d-erius").checked=!!x.erius;$("#d-poly").checked=!!x.poly;
   document.querySelector(`#scale [data-s="${x.sev||0}"]`).click();
   $("#d-submit").textContent="Сохранить изменения";$("#d-cancel").hidden=false;
   renderDiary();
@@ -509,7 +572,7 @@ function startEdit(id){
 }
 $("#form").addEventListener("submit",e=>{
   e.preventDefault();
-  const data={when:$("#d-when").value||nowLocal(),meal,food:$("#d-food").value.trim(),sev,erius:$("#d-erius").checked,poly:$("#d-poly").checked,note:$("#d-note").value.trim()};
+  const data={when:$("#d-when").value||nowLocal(),meal,food:$("#d-food").value.trim(),sev,note:$("#d-note").value.trim()};
   if(!data.food&&!data.note&&sev===0){$("#d-food").focus();return}
   const old=editId&&entries.find(y=>y.id===editId);
   if(old)Object.assign(old,data,{edited:Date.now()});
@@ -528,7 +591,7 @@ $("#entries").addEventListener("click",e=>{
 function flash(btn,text,back){btn.textContent=text;setTimeout(()=>btn.textContent=back,2000)}
 $("#copy").addEventListener("click",async()=>{
   const list=[...entries].sort((a,b)=>String(a.when).localeCompare(String(b.when)));
-  const txt="Дневник питания и сыпи\n\n"+list.map(x=>`${fmt(x.when)} — сыпь: ${SEV[x.sev]}\n${(x.food||x.meal)?(x.meal||"Ела")+": "+(x.food||"")+"\n":""}${(x.erius||x.poly)?"Лекарства: "+[x.erius?"Эриус":"",x.poly?"Полисорб":""].filter(Boolean).join(", ")+"\n":""}${x.note?"Заметка: "+x.note+"\n":""}`).join("\n");
+  const txt="Дневник питания и сыпи\n\n"+list.map(x=>x.type==="med"?`${fmt(x.when)} — выпила ${x.med}\n`:`${fmt(x.when)} — сыпь: ${SEV[x.sev]}\n${(x.food||x.meal)?(x.meal||"Ела")+": "+(x.food||"")+"\n":""}${(x.erius||x.poly)?"Лекарства: "+[x.erius?"Эриус":"",x.poly?"Полисорб":""].filter(Boolean).join(", ")+"\n":""}${x.note?"Заметка: "+x.note+"\n":""}`).join("\n");
   try{await navigator.clipboard.writeText(txt);flash($("#copy"),"Скопировано","Скопировать для врача")}
   catch(err){console.error(err);flash($("#copy"),"Не удалось скопировать","Скопировать для врача")}
 });
