@@ -305,7 +305,7 @@ button.today-chip{cursor:pointer}
       <h3>Лекарства</h3>
       <ul>
         <li><b>Эриус</b> каждый день в одно время, даже если сыпи нет.</li>
-        <li><b>Полисорб</b> отдельно от Эриуса, с разницей 1–2 часа: сорбент связывает лекарство.</li>
+        <li><b>Полисорб:</b> после него есть и пить лекарства — не раньше чем через час: сорбент связывает лекарство.</li>
         <li><b>Не пить</b> Ринзу и похожие средства от простуды: Колдрекс, Терафлю, Фервекс. На Ринзу был отёк губ.</li>
         <li><b>Лекарства — без красителей.</b> Смотреть состав во вкладыше: E124 (Понсо 4R, есть в Ринзе), E110, E102 и любое слово «краситель». Лучше белые таблетки; в аптеке можно спросить вариант без красителей.</li>
         <li>Комбинированные порошки и таблетки «от простуды» не брать — в них много веществ сразу.</li>
@@ -331,7 +331,7 @@ button.today-chip{cursor:pointer}
     </div>
     <p class="note">Подсказки собраны из общих рекомендаций и не заменяют назначения врача.</p>
   </section>
-  <p class="ver">v1.30</p>
+  <p class="ver">v1.32</p>
 </div>
 
 <div class="cook" id="cook" hidden role="dialog" aria-label="Режим готовки">
@@ -561,26 +561,17 @@ function renderDiary(){
   updateBackupHint();renderToday();renderMeds();
 }
 /* ---------- Лекарства: отдельные записи type:"med" ---------- */
-// Полисорб отдельно: от еды — 1 час, от Эриуса — 2 часа (в Памятке «с разницей 1–2 часа»)
+// Полисорб: после него еда и лекарства — не раньше чем через час
 function lastMed(name){return entries.filter(x=>x.type==="med"&&x.med===name).sort((a,b)=>String(b.when).localeCompare(String(a.when)))[0]}
 function hm(t){return new Date(t).toLocaleTimeString("ru-RU",{hour:"2-digit",minute:"2-digit"})}
 function dur(ms){const t=Math.max(0,Math.round(ms/1000)),h=Math.floor(t/3600),m=Math.floor(t%3600/60);return h?`${h} ч ${pad(m)} мин`:`${m}:${pad(t%60)}`}
 function dayWord(t){const dd=Math.round((new Date(new Date(t).toDateString())-new Date(new Date().toDateString()))/864e5);return dd===0?"сегодня":dd===1?"завтра":dd===-1?"вчера":new Date(t).toLocaleDateString("ru-RU",{day:"numeric",month:"long"})}
 function renderMeds(){
-  const now=Date.now(),lines=[],e=lastMed("Эриус"),p=lastMed("Полисорб");
-  // Эриус — раз в сутки: следующий через 24 часа после прошлого
-  if(!e)lines.push("Эриус: ещё не отмечен");
-  else{const t=new Date(e.when).getTime(),next=t+864e5;
-    lines.push(`Эриус: ${dayWord(t)} в ${hm(t)}`);
-    lines.push(now<next?`Следующий Эриус — ${dayWord(next)} в ${hm(next)}, через ${dur(next-now)}`:`<b>Эриус — пора выпить (прошло ${dur(now-t)})</b>`);
-    if(now<t+72e5)lines.push(`<b>Полисорб — через ${dur(t+72e5-now)} (в ${hm(t+72e5)})</b>`)}
-  // Полисорб: еда через час, Эриус через 2 часа
-  if(!p)lines.push("Полисорб: ещё не отмечен");
-  else{const t=new Date(p.when).getTime();
-    lines.push(`Полисорб: ${dayWord(t)} в ${hm(t)}`);
-    if(now<t+36e5)lines.push(`<b>Еда — через ${dur(t+36e5-now)} (в ${hm(t+36e5)})</b>`);
-    // ждать Эриус после Полисорба — только если его время уже подходит
-    if(now<t+72e5&&(!e||new Date(e.when).getTime()+864e5<t+72e5))lines.push(`<b>Эриус — через ${dur(t+72e5-now)} (в ${hm(t+72e5)})</b>`)}
+  // просто два счётчика: до следующего Эриуса (раз в сутки) и час после Полисорба
+  const now=Date.now(),e=lastMed("Эриус"),p=lastMed("Полисорб"),lines=[];
+  if(!e)lines.push("Эриус — не отмечен");
+  else{const next=new Date(e.when).getTime()+864e5;lines.push(now<next?`Эриус — через ${dur(next-now)}`:"<b>Эриус — пора</b>")}
+  if(p){const t=new Date(p.when).getTime()+36e5;if(now<t)lines.push(`<b>Еда и лекарства — через ${dur(t-now)}</b>`)}
   $("#med-info").innerHTML=lines.map(l=>`<span>${l}</span>`).join("");
 }
 $("#med-when").value=nowLocal();
