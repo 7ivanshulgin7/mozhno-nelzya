@@ -1,5 +1,5 @@
 // Офлайн-кэш. При обновлении сайта поднять версию в CACHE.
-const CACHE = "mn-v1.36";
+const CACHE = "mn-v1.37";
 const NET_WAIT_MS = 1500; // сколько ждём сеть, если в кэше уже есть версия
 const FILES = ["./", "index.html", "manifest.json", "icon-180.png", "icon-192.png", "icon-512.png"];
 
